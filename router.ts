@@ -63,11 +63,10 @@ export class Router {
     this.#routes.push(route);
   }
 
-  #find(pattern: URLPattern, method: Method): Route {
-    const routes = this.#routes
-      .filter((r) => r.pattern === pattern)
-      .filter((r) => r.method === method);
-    return routes[0];
+  #find(pattern: URLPattern, method: Method): Route | null {
+    const matches = (r: Route) =>
+      r.method === method && r.pattern.pathname === pattern.pathname;
+    return this.#routes.find(matches) ?? null;
   }
 
   #match(pathname: string, method: Method): Route | null {
