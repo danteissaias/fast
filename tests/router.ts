@@ -10,7 +10,7 @@ async function send(app: Application, pathname: string) {
 Deno.test("hello world", async () => {
   const app = new Application();
   const router = new Router();
-  router.all("/", () => Response.json({}));
+  router.all("/", () => "hello world");
   app.use(router.routes());
   const res = await send(app, "/");
   assertEquals(res.status, 200);
