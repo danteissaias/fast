@@ -70,34 +70,34 @@ export class Router {
     return routes[0];
   }
 
-  // Cached matcher for URLPatterns
-  // 2x faster than with no cache on benchmark
   #match(pathname: string, method: Method): Route | null {
+    const pattern = this.#patterns.find((p) => p.test({ pathname }));
+    if (!pattern) return null;
+    return this.#find(pattern, method);
+  }
+
+  // Cached matcher for URLPatterns
+  // 1.5x faster than with no cache on benchmark
+  #fast(pathname: string, method: Method): Route | null {
     const id = method + ":" + pathname;
     const hit = this.#cache.get(id);
     if (hit) return hit;
-    const pattern = this.#patterns.find((p) => p.test({ pathname }));
-    if (pattern) {
-      const route = this.#find(pattern, method);
-      this.#cache.set(id, route);
-      return route;
-    }
-
-    this.#cache.set(id, null);
-    return null;
+    const res = this.#match(pathname, method);
+    this.#cache.set(id, res);
+    return res;
   }
 
   routes(): Middleware {
-    return (ctx, next) => {
+    return (ctx, next): Promise<Response> => {
       const [url, method] = [ctx.url, ctx.request.method as Method];
-      const route = this.#match(url.pathname, method);
+      const route = this.#fast(url.pathname, method);
       if (!route) return next(ctx);
       const { middlewares, pattern } = route;
       // Skip exec when not needed
-      const param = pattern.pathname.includes(":");
+      // 2x faster on routes without param
+      const param = pattern.pathname.indexOf(":") > -1;
       if (param) ctx.params = pattern.exec(url)!.pathname.groups;
-      const handler = compose(middlewares);
-      return handler(ctx);
+      return compose(middlewares)(ctx);
     };
   }
 }
