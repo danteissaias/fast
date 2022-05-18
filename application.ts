@@ -19,7 +19,7 @@ export class Application {
 
   async listen(opts: { hostname?: string; port: number } = { port: 8000 }) {
     if (!this.#middlewares.length) throw new Error("no middleware");
-    const { hostname = "localhost", port } = opts;
+    const { hostname = "0.0.0.0", port } = opts;
     await serve((r) => this.handle(r), { hostname, port });
   }
 }
