@@ -7,7 +7,8 @@ export type NextFunction = (
 export type MiddlewareResponse =
   | Response
   | void
-  | Record<string, unknown>
+  | number
+  | unknown
   | string
   | null;
 
@@ -18,7 +19,7 @@ export type Middleware = (
 
 // Normalize middleware response into Response
 export function decode(res: Response | void | unknown | string): Response {
-  if (!res) return new Response(null, { status: 204 });
+  if (!res && res !== 0) return new Response(null, { status: 204 });
   if (res instanceof Response) return res;
   if (typeof res === "string") return new Response(res);
   const str = JSON.stringify(res);
