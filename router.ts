@@ -100,7 +100,7 @@ export class Router {
     return (ctx, next) => {
       const [url, method] = [ctx.url, ctx.request.method as Method];
       const match = this.#match(url.pathname, method);
-      if (!match) return next(ctx);
+      if (!match || match.routes.length === 0) return next(ctx);
       const { routes, pattern } = match;
       // Skip exec when not needed
       const param = routes[0].pathname.includes(":");
