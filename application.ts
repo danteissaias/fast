@@ -7,11 +7,16 @@ interface ListenInit {
   hostname: string;
 }
 
+const fallback: Middleware = (ctx) => ctx.throw(404, "Not Found");
+
 export class Application {
-  #middlewares: Middleware[] = [];
+  #middlewares: Middleware[] = [fallback];
 
   use(...middlewares: Middleware[]) {
-    this.#middlewares.push(...middlewares);
+    // Insert new middlewares before fallback:
+    // - Faster than concatting fallback in handle()
+    // - We want to keep handle() standalone so can't push fallback in listen()
+    this.#middlewares.splice(-1, 0, ...middlewares);
     return this;
   }
 
@@ -23,8 +28,6 @@ export class Application {
 
   async listen(opts: Partial<ListenInit> = {}) {
     if (!this.#middlewares.length) throw new Error("no middleware");
-    const fallback: Middleware = (ctx) => ctx.throw(404, "Not Found");
-    this.#middlewares.push(fallback);
     const { hostname = "0.0.0.0", port = 8000 } = opts;
     await serve((r) => this.handle(r), { hostname, port });
   }
