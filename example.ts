@@ -1,12 +1,12 @@
-import { serve } from "https://deno.land/std@0.139.0/http/server.ts";
-import { cors, Router } from "./mod.ts";
+import { Application } from "./application.ts";
+import { Router } from "./router.ts";
 
-const router = new Router({ middlewares: [cors] });
-const subrouter = new Router();
+const app = new Application();
+const router = new Router();
 
-router.use(cors);
+app.use(router.routes());
 router.get("/", () => "hello world");
-subrouter.get("/error", (ctx) => ctx.throw(500, "Error thrown from route."));
-router.use(subrouter.routes());
+router.get("/204", () => null);
+router.get("/:val", (ctx) => ({ hello: ctx.params.val }));
 
-await serve(router.handle);
+await app.listen();

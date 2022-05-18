@@ -1,132 +1,113 @@
-import { Context, HttpError } from "./context.ts";
-import { compose, decode, Middleware } from "./middleware.ts";
+import { compose, Middleware } from "./middleware.ts";
 
-type HttpMethod =
-  | "HEAD"
-  | "GET"
-  | "POST"
-  | "PUT"
-  | "PATCH"
-  | "DELETE";
+type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD" | "OPTIONS";
 
 interface Route {
   pathname: string;
-  method: HttpMethod;
+  method?: Method;
   middlewares: Middleware[];
 }
 
-function matchPatterns(patterns: URLPattern[], pathname: string) {
-  const pattern = patterns.find((p) => p.test(pathname));
-  if (!pattern) return null;
-  const res = pattern.exec(pathname);
-  if (!res) throw new Error("no result from pattern exec");
-  return { pattern, res };
-}
-
-interface RouterInit {
-  middlewares?: Middleware[];
+interface MatchedRoutes {
+  pattern: URLPattern;
+  routes: Route[];
 }
 
 export class Router {
   #routes: Route[];
   #patterns: URLPattern[];
-  #middlewares: Middleware[];
+  #cache: Map<string, MatchedRoutes | null>;
 
-  constructor({ middlewares = [] }: RouterInit = {}) {
+  constructor() {
     this.#routes = [];
     this.#patterns = [];
-    this.#middlewares = middlewares.concat([this.#error]);
-    this.handle = this.handle.bind(this);
+    this.#cache = new Map();
   }
 
-  #error: Middleware = async (ctx, next) => {
-    try {
-      return await next(ctx);
-    } catch (error) {
-      const { status, message } = error instanceof HttpError
-        ? error
-        : new HttpError(500, error.message);
-      return new Response(message, { status });
-    }
-  };
-
-  // Accepts middlewhere and router
-  use(...middlewares: Middleware[]) {
-    this.#middlewares.push(...middlewares);
+  all(pathname: string, ...middlewares: Middleware[]) {
+    this.#add(pathname, middlewares);
     return this;
   }
 
-  get(path: string, ...middlewares: Middleware[]) {
-    this.#add(path, "GET", middlewares);
+  get(pathname: string, ...middlewares: Middleware[]) {
+    this.#add(pathname, middlewares, "GET");
     return this;
   }
 
-  post(path: string, ...middlewares: Middleware[]) {
-    this.#add(path, "POST", middlewares);
+  post(pathname: string, ...middlewares: Middleware[]) {
+    this.#add(pathname, middlewares, "POST");
     return this;
   }
 
-  put(path: string, ...middlewares: Middleware[]) {
-    this.#add(path, "PUT", middlewares);
+  put(pathname: string, ...middlewares: Middleware[]) {
+    this.#add(pathname, middlewares, "PUT");
     return this;
   }
 
-  patch(path: string, ...middlewares: Middleware[]) {
-    this.#add(path, "PATCH", middlewares);
+  patch(pathname: string, ...middlewares: Middleware[]) {
+    this.#add(pathname, middlewares, "PATCH");
     return this;
   }
 
-  delete(path: string, ...middlewares: Middleware[]) {
-    this.#add(path, "DELETE", middlewares);
+  delete(pathname: string, ...middlewares: Middleware[]) {
+    this.#add(pathname, middlewares, "DELETE");
     return this;
   }
 
-  head(path: string, ...middlewares: Middleware[]) {
-    this.#add(path, "HEAD", middlewares);
+  head(pathname: string, ...middlewares: Middleware[]) {
+    this.#add(pathname, middlewares, "HEAD");
     return this;
   }
 
-  #add(pathname: string, method: HttpMethod, middlewares: Middleware[]) {
+  options(pathname: string, ...middlewares: Middleware[]) {
+    this.#add(pathname, middlewares, "OPTIONS");
+    return this;
+  }
+
+  #add(pathname: string, middlewares: Middleware[], method?: Method) {
+    const current = this.#find(pathname, method);
+    if (current) return current.middlewares.push(...middlewares);
+    const route: Route = { pathname, middlewares, method };
     const pattern = new URLPattern({ pathname });
-    const has = this.#patterns.includes(pattern);
-    if (!has) this.#patterns.push(pattern);
-    const route = this.#find(pathname, method);
-    if (route) route.middlewares.push(...middlewares);
-    else this.#routes.push({ pathname, method, middlewares });
+    this.#patterns.push(pattern);
+    this.#routes.push(route);
   }
 
-  #find(pathname: string, method: string) {
-    const cmp = (r: Route) => r.method === method && r.pathname === pathname;
-    return this.#routes.find(cmp);
+  #find(pattern: string, method?: Method): Route {
+    const routes = this.#routes
+      .filter((r) => r.pathname === pattern)
+      .filter((r) => r.method === method);
+    return routes[0];
   }
 
-  // Returns a context and middleware stack
-  #match(request: Request): [Context, Middleware[]] {
-    const ctx = new Context(request, {});
-    const middlewares: Middleware[] = this.#middlewares;
-    const result = matchPatterns(this.#patterns, request.url);
-    if (!result) return [ctx, middlewares];
-    const route = this.#find(result.pattern.pathname, request.method);
-    const mta: Middleware = (ctx) => ctx.throw(405, "Method Not Allowed");
-    if (!route) return [ctx, middlewares.concat(mta)];
-    ctx.params = result.res.pathname.groups;
-    return [ctx, middlewares.concat(route.middlewares)];
+  // Cached matcher for URLPatterns
+  // 2x faster than with no cache on benchmark
+  #match(pathname: string, method?: Method): MatchedRoutes | null {
+    const id = method ? method + ":" + pathname : pathname;
+    const hit = this.#cache.get(id);
+    if (hit) return hit;
+    const pattern = this.#patterns.find((p) => p.test({ pathname }));
+    if (!pattern) return null;
+    const routes = this.#routes
+      .filter((r) => r.pathname === pattern?.pathname)
+      .filter((r) => method ? (r.method === method || !r.method) : true);
+    const res = { routes, pattern };
+    this.#cache.set(id, res);
+    return res;
   }
 
   routes(): Middleware {
-    return async (ctx, next) => {
-      const [{ params }, middlewares] = this.#match(ctx.request);
-      ctx.params = params;
-      const handler = compose(middlewares.concat(next));
-      return await handler(ctx);
+    return (ctx, next) => {
+      const [url, method] = [ctx.url, ctx.request.method as Method];
+      const match = this.#match(url.pathname, method);
+      if (!match) return next(ctx);
+      const { routes, pattern } = match;
+      // Skip exec when not needed
+      const param = routes[0].pathname.includes(":");
+      if (param) ctx.params = pattern.exec(url)!.pathname.groups;
+      const middlewares = routes.flatMap((r) => r.middlewares);
+      const handler = compose(middlewares);
+      return handler(ctx);
     };
-  }
-
-  async handle(request: Request) {
-    const [ctx, middlewares] = this.#match(request);
-    const fallback = () => new Response("Not Found", { status: 404 });
-    const handler = compose(middlewares.concat(fallback));
-    const res = await handler(ctx);
-    return decode(res);
   }
 }

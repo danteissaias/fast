@@ -1,32 +1,36 @@
-type Params = Record<string, string>;
-
 export class HttpError extends Error {
-  status: number;
-  constructor(status: number, message: string) {
-    super(message);
-    this.status = status;
-  }
+  expose = false;
+  status = 500;
+  headers = new Headers();
+}
+
+// Convert error to response
+export function convert(err: Error | HttpError) {
+  const is = err instanceof HttpError;
+  const httpErr = is ? err : new HttpError(err.message);
+  const message = httpErr.expose ? httpErr.message : "Internal Server Error";
+  const str = JSON.stringify({ message });
+  const headers = { "content-type": "application/json" };
+  return new Response(str, { status: httpErr.status, headers });
 }
 
 export class Context {
   #url?: URL;
 
   constructor(
-    public request: Request,
-    public params: Params = {},
+    readonly request: Request,
+    public params: Record<string, string> = {},
   ) {}
 
-  get url(): URL {
+  get url() {
     return this.#url ?? (this.#url = new URL(this.request.url));
   }
 
-  assert(expr: unknown, status?: number, message?: string): asserts expr {
-    if (!status) status = 500;
-    if (!message) message = "Assertion failed";
-    if (!expr) this.throw(status, message);
-  }
-
-  throw(status: number, message: string) {
-    throw new HttpError(status, message);
+  throw(status: number, message?: string, headers?: Headers) {
+    const error = new HttpError(message);
+    error.status = status;
+    error.expose = status < 500 ? true : false;
+    if (headers) error.headers = headers;
+    throw error;
   }
 }
