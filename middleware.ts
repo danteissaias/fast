@@ -7,7 +7,6 @@ export type NextFunction = (
 export type MiddlewareResponse =
   | Response
   | void
-  | number
   | unknown
   | string
   | null;
@@ -18,22 +17,18 @@ export type Middleware = (
 ) => MiddlewareResponse | Promise<MiddlewareResponse>;
 
 // Normalize middleware response into Response
-export function decode(res: Response | void | unknown | string): Response {
-  if (!res && res !== 0) return new Response(null, { status: 204 });
+function normalize(res: MiddlewareResponse): Response {
   if (res instanceof Response) return res;
+  if (!res) return new Response(null, { status: 204 });
   if (typeof res === "string") return new Response(res);
-  const str = JSON.stringify(res);
-  const headers = { "content-type": "application/json" };
-  return new Response(str, { headers });
+  return Response.json(res);
 }
 
 // Returns a single handler from a stack of middleware
-export function compose(
-  middlewares: Middleware[],
-): NextFunction {
-  if (!middlewares.length) throw new Error("compose called without middleware");
+export function compose(mw: Middleware[]): NextFunction {
+  if (!mw.length) throw new Error("compose called without middleware");
   let current = -1;
   const next: NextFunction = async (ctx) =>
-    decode(await middlewares[++current](ctx, next));
+    normalize(await mw[++current](ctx, next));
   return next;
 }

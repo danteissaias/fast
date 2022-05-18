@@ -9,9 +9,7 @@ export function convert(err: Error | HttpError) {
   const is = err instanceof HttpError;
   const httpErr = is ? err : new HttpError(err.message);
   const message = httpErr.expose ? httpErr.message : "Internal Server Error";
-  const str = JSON.stringify({ message });
-  const headers = { "content-type": "application/json" };
-  return new Response(str, { status: httpErr.status, headers });
+  return Response.json({ message }, { status: httpErr.status });
 }
 
 export class Context {
