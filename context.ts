@@ -26,6 +26,16 @@ export class Context {
     return this.#url ?? (this.#url = new URL(this.request.url));
   }
 
+  assert(
+    cond: unknown,
+    status: number,
+    message?: string,
+    headers?: Headers,
+  ): asserts cond {
+    if (cond) return;
+    this.throw(status, message, headers);
+  }
+
   throw(status: number, message?: string, headers?: Headers) {
     const error = new HttpError(message);
     error.status = status;

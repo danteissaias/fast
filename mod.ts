@@ -1,5 +1,5 @@
 export { Application } from "./application.ts";
-export { Context } from "./context.ts";
+export { Context, HttpError } from "./context.ts";
 export type {
   Middleware,
   MiddlewareResponse,
