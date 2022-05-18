@@ -3,30 +3,20 @@ import { compose, Middleware } from "./middleware.ts";
 type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD" | "OPTIONS";
 
 interface Route {
-  pathname: string;
-  method?: Method;
-  middlewares: Middleware[];
-}
-
-interface MatchedRoutes {
   pattern: URLPattern;
-  routes: Route[];
+  method: Method;
+  middlewares: Middleware[];
 }
 
 export class Router {
   #routes: Route[];
   #patterns: URLPattern[];
-  #cache: Map<string, MatchedRoutes | null>;
+  #cache: Map<string, Route | null>;
 
   constructor() {
     this.#routes = [];
     this.#patterns = [];
     this.#cache = new Map();
-  }
-
-  all(pathname: string, ...middlewares: Middleware[]) {
-    this.#add(pathname, middlewares);
-    return this;
   }
 
   get(pathname: string, ...middlewares: Middleware[]) {
@@ -64,48 +54,48 @@ export class Router {
     return this;
   }
 
-  #add(pathname: string, middlewares: Middleware[], method?: Method) {
-    const current = this.#find(pathname, method);
-    if (current) return current.middlewares.push(...middlewares);
-    const route: Route = { pathname, middlewares, method };
+  #add(pathname: string, middlewares: Middleware[], method: Method) {
     const pattern = new URLPattern({ pathname });
-    this.#patterns.push(pattern);
+    const current = this.#find(pattern, method);
+    if (current) return current.middlewares.push(...middlewares);
+    const route: Route = { pattern, middlewares, method };
+    if (!this.#patterns.includes(pattern)) this.#patterns.push(pattern);
     this.#routes.push(route);
   }
 
-  #find(pattern: string, method?: Method): Route {
+  #find(pattern: URLPattern, method: Method): Route {
     const routes = this.#routes
-      .filter((r) => r.pathname === pattern)
+      .filter((r) => r.pattern === pattern)
       .filter((r) => r.method === method);
     return routes[0];
   }
 
   // Cached matcher for URLPatterns
   // 2x faster than with no cache on benchmark
-  #match(pathname: string, method?: Method): MatchedRoutes | null {
-    const id = method ? method + ":" + pathname : pathname;
+  #match(pathname: string, method: Method): Route | null {
+    const id = method + ":" + pathname;
     const hit = this.#cache.get(id);
     if (hit) return hit;
     const pattern = this.#patterns.find((p) => p.test({ pathname }));
-    if (!pattern) return null;
-    const routes = this.#routes
-      .filter((r) => r.pathname === pattern?.pathname)
-      .filter((r) => method ? (r.method === method || !r.method) : true);
-    const res = { routes, pattern };
-    this.#cache.set(id, res);
-    return res;
+    if (pattern) {
+      const route = this.#find(pattern, method);
+      this.#cache.set(id, route);
+      return route;
+    }
+
+    this.#cache.set(id, null);
+    return null;
   }
 
   routes(): Middleware {
     return (ctx, next) => {
       const [url, method] = [ctx.url, ctx.request.method as Method];
-      const match = this.#match(url.pathname, method);
-      if (!match || match.routes.length === 0) return next(ctx);
-      const { routes, pattern } = match;
+      const route = this.#match(url.pathname, method);
+      if (!route) return next(ctx);
+      const { middlewares, pattern } = route;
       // Skip exec when not needed
-      const param = routes[0].pathname.includes(":");
+      const param = pattern.pathname.includes(":");
       if (param) ctx.params = pattern.exec(url)!.pathname.groups;
-      const middlewares = routes.flatMap((r) => r.middlewares);
       const handler = compose(middlewares);
       return handler(ctx);
     };
