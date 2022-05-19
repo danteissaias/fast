@@ -20,10 +20,10 @@ export class Application {
     return this;
   }
 
-  handle(request: Request) {
+  async handle(request: Request) {
     const ctx = new Context(request);
     const next = compose(this.#middlewares);
-    return next(ctx).catch(convert);
+    return await next(ctx).catch(convert);
   }
 
   async listen(opts: Partial<ListenInit> = {}) {
