@@ -80,7 +80,7 @@ export class Router {
   #fast(pathname: string, method: Method): Route | null {
     const id = method + ":" + pathname;
     const hit = this.#cache.get(id);
-    if (hit) return hit;
+    if (hit !== undefined) return hit;
     const res = this.#match(pathname, method);
     this.#cache.set(id, res);
     return res;

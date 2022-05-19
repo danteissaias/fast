@@ -26,9 +26,9 @@ Application + Router:
 Running 30s test @ http://127.0.0.1:8000
   12 threads and 400 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency     3.92ms  573.83us  59.79ms   98.62%
-    Req/Sec     8.38k   323.09    14.06k    93.56%
-  3003733 requests in 30.05s, 429.69MB read
-  Socket errors: connect 0, read 492, write 27, timeout 0
-Requests/sec:  99970.23
-Transfer/sec:     14.30MB
+    Latency     3.90ms  629.47us  62.75ms   98.99%
+    Req/Sec     8.41k   349.52    12.40k    93.67%
+  3015823 requests in 30.04s, 431.42MB read
+  Socket errors: connect 0, read 647, write 0, timeout 0
+Requests/sec: 100393.14
+Transfer/sec:     14.36MB
