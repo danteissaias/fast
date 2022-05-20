@@ -87,7 +87,7 @@ export class Router {
   }
 
   routes(): Middleware {
-    return (ctx, next): Promise<Response> => {
+    return (ctx, next) => {
       const [url, method] = [ctx.url, ctx.request.method as Method];
       const match = this.#match(url.pathname, method);
       if (!match) return next(ctx);

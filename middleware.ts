@@ -17,7 +17,7 @@ export type Middleware = (
 ) => MiddlewareResponse | Promise<MiddlewareResponse>;
 
 // Normalize middleware response into Response
-function normalize(res: MiddlewareResponse): Response {
+function normalize(res: MiddlewareResponse) {
   if (res instanceof Response) return res;
   if (!res) return new Response(null, { status: 204 });
   if (typeof res === "string") return new Response(res);
@@ -25,7 +25,7 @@ function normalize(res: MiddlewareResponse): Response {
 }
 
 // Returns a single handler from a stack of middleware
-export function compose(mw: Middleware[]): NextFunction {
+export function compose(mw: Middleware[]) {
   if (!mw.length) throw new Error("compose called without middleware");
   let current = -1;
   const next: NextFunction = async (ctx) =>
