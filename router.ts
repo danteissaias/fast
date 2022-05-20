@@ -3,19 +3,24 @@ import { compose, Middleware } from "./middleware.ts";
 type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD" | "OPTIONS";
 
 interface Route {
-  pattern: URLPattern;
+  pathname: string;
   method: Method;
   middlewares: Middleware[];
 }
 
+interface RouteMatch {
+  route: Route;
+  res: URLPatternResult;
+}
+
 export class Router {
   #routes: Route[];
-  #patterns: URLPattern[];
-  #cache: Map<string, Route | null>;
+  #patterns: Set<URLPattern>;
+  #cache: Map<string, RouteMatch>;
 
   constructor() {
     this.#routes = [];
-    this.#patterns = [];
+    this.#patterns = new Set();
     this.#cache = new Map();
   }
 
@@ -55,48 +60,40 @@ export class Router {
   }
 
   #add(pathname: string, middlewares: Middleware[], method: Method) {
-    const pattern = new URLPattern({ pathname });
-    const current = this.#find(pattern, method);
+    const current = this.#find(pathname, method);
     if (current) return current.middlewares.push(...middlewares);
-    const route: Route = { pattern, middlewares, method };
-    if (!this.#patterns.includes(pattern)) this.#patterns.push(pattern);
-    this.#routes.push(route);
+    this.#routes.push({ pathname, middlewares, method });
+    this.#patterns.add(new URLPattern({ pathname }));
   }
 
-  #find(pattern: URLPattern, method: Method): Route | null {
+  #find(pathname: string, method: Method) {
     const matches = (r: Route) =>
-      r.method === method && r.pattern.pathname === pattern.pathname;
-    return this.#routes.find(matches) ?? null;
+      r.method === method && r.pathname === pathname;
+    return this.#routes.find(matches);
   }
 
-  #match(pathname: string, method: Method): Route | null {
-    const pattern = this.#patterns.find((p) => p.test({ pathname }));
-    if (!pattern) return null;
-    return this.#find(pattern, method);
-  }
-
-  // Cached matcher for URLPatterns
-  // 1.5x faster than with no cache on benchmark
-  #fast(pathname: string, method: Method): Route | null {
-    const id = method + ":" + pathname;
+  #match(pathname: string, method: Method) {
+    const id = method + pathname;
     const hit = this.#cache.get(id);
-    if (hit !== undefined) return hit;
-    const res = this.#match(pathname, method);
-    this.#cache.set(id, res);
-    return res;
+    if (hit) return hit;
+    for (const pattern of this.#patterns) {
+      const res = pattern.exec({ pathname });
+      if (!res) continue;
+      const route = this.#find(pattern.pathname, method)!;
+      const match = { res, route };
+      this.#cache.set(id, match);
+      return match;
+    }
   }
 
   routes(): Middleware {
     return (ctx, next): Promise<Response> => {
       const [url, method] = [ctx.url, ctx.request.method as Method];
-      const route = this.#fast(url.pathname, method);
-      if (!route) return next(ctx);
-      const { middlewares, pattern } = route;
-      // Skip exec when not needed
-      // 2x faster on routes without param
-      const param = pattern.pathname.indexOf(":") > -1;
-      if (param) ctx.params = pattern.exec(url)!.pathname.groups;
-      return compose(middlewares)(ctx);
+      const match = this.#match(url.pathname, method);
+      if (!match) return next(ctx);
+      const { res, route } = match;
+      ctx.params = res.pathname.groups;
+      return compose(route.middlewares)(ctx);
     };
   }
 }
