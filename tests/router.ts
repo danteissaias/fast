@@ -16,8 +16,4 @@ Deno.test("hello world", async () => {
   assertEquals(res.status, 200);
   const text = await res.text();
   assertEquals(text, "hello world");
-  const res2 = await send(app, "/404");
-  assertEquals(res2.status, 404);
-  const err = await res2.json();
-  assertEquals(err, { message: "Not Found" });
 });

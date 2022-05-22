@@ -4,13 +4,6 @@ export class HttpError extends Error {
   headers = new Headers();
 }
 
-// Convert error to response
-export function convert(err: Error | HttpError) {
-  const httpErr = err instanceof HttpError ? err : new HttpError(err.message);
-  const message = httpErr.expose ? httpErr.message : "Internal Server Error";
-  return Response.json({ message }, { status: httpErr.status });
-}
-
 export class Context {
   #url?: URL;
 
