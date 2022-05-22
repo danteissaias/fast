@@ -1,20 +1,14 @@
-import { Context, convert } from "./context.ts";
+import {
+  ServeInit,
+  Server,
+} from "https://deno.land/std@0.140.0/http/server.ts";
+import { Context, HttpError } from "./context.ts";
 import { compose, Middleware } from "./middleware.ts";
 
-const fallback: Middleware = (ctx) => ctx.throw(404, "Not Found");
-
-export interface ListenInit extends Partial<Deno.ListenOptions> {
-  /** An AbortSignal to close the server and all connections. */
-  signal?: AbortSignal;
-}
-
 export class Application {
-  #middlewares: Middleware[] = [fallback];
+  #middlewares: Middleware[] = [(ctx) => ctx.throw(404, "Not Found")];
 
   use(...middlewares: Middleware[]) {
-    // Insert new middlewares before fallback:
-    // - Faster than concatting fallback in handle()
-    // - We want to keep handle() standalone so can't push fallback in listen()
     this.#middlewares.splice(-1, 0, ...middlewares);
     return this;
   }
@@ -22,22 +16,24 @@ export class Application {
   async handle(request: Request) {
     const ctx = new Context(request);
     const next = compose(this.#middlewares);
-    return await next(ctx).catch(convert);
+    return await next(ctx);
   }
 
-  async #serveHttp(conn: Deno.Conn) {
-    for await (const ev of Deno.serveHttp(conn)) {
-      const res = await this.handle(ev.request);
-      ev.respondWith(res);
-    }
-  }
-
-  async listen(opts: ListenInit = {}) {
-    if (!this.#middlewares.length) throw new Error("no middleware");
-    const { hostname = "0.0.0.0", port = 8000, signal } = opts;
-    const server = Deno.listen({ hostname, port });
-    signal?.addEventListener("abort", () => server.close());
+  async serve(opts: ServeInit = {}) {
+    if (!this.#middlewares.length) throw new Error("No middleware");
+    const port = opts.port ?? 8000;
+    const hostname = opts.hostname ?? "0.0.0.0";
+    const handler = this.handle.bind(this);
+    const onError = opts.onError ??
+      ((err) => {
+        const { message = "Internal Server Error", status = 500 } =
+          err instanceof HttpError ? err : {};
+        return Response.json({ message }, { status });
+      });
+    const server = new Server({ port, hostname, handler, onError });
+    const s = server.listenAndServe();
+    if (opts.onListen) opts.onListen({ port, hostname });
     console.log(`http://${hostname}:${port}/ 🚀`);
-    for await (const conn of server) this.#serveHttp(conn);
+    return await s;
   }
 }

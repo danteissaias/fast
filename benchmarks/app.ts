@@ -4,4 +4,4 @@ const app = new Application();
 
 app.use(() => "hello world");
 
-await app.listen();
+await app.serve();

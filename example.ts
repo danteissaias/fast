@@ -9,4 +9,4 @@ router.get("/", () => "hello world");
 router.get("/204", () => null);
 router.get("/:val", (ctx) => ({ hello: ctx.params.val }));
 
-await app.listen();
+await app.serve();

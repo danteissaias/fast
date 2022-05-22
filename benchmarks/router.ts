@@ -6,4 +6,4 @@ const router = new Router();
 router.get("/", () => "hello world");
 app.use(router.routes());
 
-await app.listen();
+await app.serve();
