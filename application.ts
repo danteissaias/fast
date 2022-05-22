@@ -26,6 +26,7 @@ export class Application {
     const handler = this.handle.bind(this);
     const onError = opts.onError ??
       ((err) => {
+        console.log(err);
         const { message = "Internal Server Error", status = 500 } =
           err instanceof HttpError ? err : {};
         return Response.json({ message }, { status });
