@@ -36,8 +36,8 @@ export class Application {
     if (!this.#middlewares.length) throw new Error("no middleware");
     const { hostname = "0.0.0.0", port = 8000, signal } = opts;
     const server = Deno.listen({ hostname, port });
-    for await (const conn of server) this.#serveHttp(conn);
     signal?.addEventListener("abort", () => server.close());
     console.log(`http://${hostname}:${port}/ 🚀`);
+    for await (const conn of server) this.#serveHttp(conn);
   }
 }
