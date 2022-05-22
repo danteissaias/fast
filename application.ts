@@ -1,13 +1,12 @@
-import { serve } from "https://deno.land/std@0.140.0/http/server.ts";
 import { Context, convert } from "./context.ts";
 import { compose, Middleware } from "./middleware.ts";
 
-interface ListenInit {
-  port: number;
-  hostname: string;
-}
-
 const fallback: Middleware = (ctx) => ctx.throw(404, "Not Found");
+
+export interface ListenInit extends Partial<Deno.ListenOptions> {
+  /** An AbortSignal to close the server and all connections. */
+  signal?: AbortSignal;
+}
 
 export class Application {
   #middlewares: Middleware[] = [fallback];
@@ -26,9 +25,19 @@ export class Application {
     return await next(ctx).catch(convert);
   }
 
-  async listen(opts: Partial<ListenInit> = {}) {
+  async #serveHttp(conn: Deno.Conn) {
+    for await (const ev of Deno.serveHttp(conn)) {
+      const res = await this.handle(ev.request);
+      ev.respondWith(res);
+    }
+  }
+
+  async listen(opts: ListenInit = {}) {
     if (!this.#middlewares.length) throw new Error("no middleware");
-    const { hostname = "0.0.0.0", port = 8000 } = opts;
-    await serve((r) => this.handle(r), { hostname, port });
+    const { hostname = "0.0.0.0", port = 8000, signal } = opts;
+    const server = Deno.listen({ hostname, port });
+    for await (const conn of server) this.#serveHttp(conn);
+    signal?.addEventListener("abort", () => server.close());
+    console.log(`http://${hostname}:${port}/ 🚀`);
   }
 }
