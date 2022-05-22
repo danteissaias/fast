@@ -11,6 +11,7 @@ interface Route {
 interface RouteMatch {
   route: Route;
   res: URLPatternResult;
+  pattern: URLPattern;
 }
 
 export class Router {
@@ -72,6 +73,11 @@ export class Router {
     return this.#routes.find(matches);
   }
 
+  #allowed(pathname: string) {
+    const matches = (r: Route) => r.pathname === pathname;
+    return this.#routes.filter(matches).map((r) => r.method);
+  }
+
   #match(pathname: string, method: Method) {
     const id = method + pathname;
     const hit = this.#cache.get(id);
@@ -80,7 +86,7 @@ export class Router {
       const res = pattern.exec({ pathname });
       if (!res) continue;
       const route = this.#find(pattern.pathname, method)!;
-      const match = { res, route };
+      const match = { res, route, pattern };
       this.#cache.set(id, match);
       return match;
     }
@@ -91,9 +97,19 @@ export class Router {
       const [url, method] = [ctx.url, ctx.request.method as Method];
       const match = this.#match(url.pathname, method);
       if (!match) return next(ctx);
-      const { res, route } = match;
-      ctx.params = res.pathname.groups;
-      return compose(route.middlewares)(ctx);
+      if (match.route) {
+        const { res, route } = match;
+        ctx.params = res.pathname.groups;
+        return compose(route.middlewares)(ctx);
+      } else {
+        const methods = this.#allowed(match.pattern.pathname);
+        if (!methods.length) return next(ctx);
+        const headers = new Headers();
+        headers.set("Allow", methods.toString());
+        return method === "OPTIONS"
+          ? new Response(null, { status: 204, headers })
+          : new Response("Method Not Allowed", { status: 405, headers });
+      }
     };
   }
 }
