@@ -7,12 +7,23 @@ async function send(app: Application, pathname: string) {
   return await app.handle(req);
 }
 
-Deno.test("hello world", async () => {
+Deno.test("router - hello world", async () => {
   const app = new Application();
   const router = new Router();
   router.get("/", () => "hello world");
   app.use(router.routes());
   const res = await send(app, "/");
+  assertEquals(res.status, 200);
+  const text = await res.text();
+  assertEquals(text, "hello world");
+});
+
+Deno.test("router - prefix", async () => {
+  const app = new Application();
+  const router = new Router({ prefix: "/pre" });
+  router.get("/", () => "hello world");
+  app.use(router.routes());
+  const res = await send(app, "/pre");
   assertEquals(res.status, 200);
   const text = await res.text();
   assertEquals(text, "hello world");

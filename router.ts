@@ -14,12 +14,18 @@ interface RouteMatch {
   pattern: URLPattern;
 }
 
+interface RouterInit {
+  prefix: string;
+}
+
 export class Router {
   #routes: Route[];
   #patterns: Set<URLPattern>;
   #cache: Map<string, RouteMatch>;
+  #prefix?: string;
 
-  constructor() {
+  constructor(init: Partial<RouterInit> = {}) {
+    this.#prefix = init.prefix;
     this.#routes = [];
     this.#patterns = new Set();
     this.#cache = new Map();
@@ -61,6 +67,9 @@ export class Router {
   }
 
   #add(pathname: string, middlewares: Middleware[], method: Method) {
+    const isRoot = pathname === "/";
+    const prefix = this.#prefix;
+    if (prefix) pathname = isRoot ? prefix : prefix + pathname;
     const current = this.#find(pathname, method);
     if (current) return current.middlewares.push(...middlewares);
     this.#routes.push({ pathname, middlewares, method });
