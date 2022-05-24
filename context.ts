@@ -1,7 +1,7 @@
 export class HttpError extends Error {
   expose = false;
   status = 500;
-  headers = new Headers();
+  init: ResponseInit = {};
 }
 
 export class Context {
@@ -18,19 +18,18 @@ export class Context {
 
   assert(
     cond: unknown,
-    status: number,
     message?: string,
-    headers?: Headers,
+    init: ResponseInit = {},
   ): asserts cond {
     if (cond) return;
-    this.throw(status, message, headers);
+    this.throw(message, init);
   }
 
-  throw(status: number, message?: string, headers?: Headers) {
+  throw(message?: string, init: ResponseInit = {}) {
     const error = new HttpError(message);
-    error.status = status;
-    error.expose = status < 500 ? true : false;
-    if (headers) error.headers = headers;
+    if (init.status) error.status = init.status;
+    error.expose = error.status < 500 ? true : false;
+    error.init = init;
     throw error;
   }
 }

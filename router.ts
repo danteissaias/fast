@@ -117,7 +117,7 @@ export class Router {
         headers.set("Allow", methods.toString());
         return method === "OPTIONS"
           ? new Response(null, { status: 204, headers })
-          : new Response("Method Not Allowed", { status: 405, headers });
+          : ctx.throw("Method Not Allowed", { status: 405, headers });
       }
     };
   }
