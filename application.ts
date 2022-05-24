@@ -5,7 +5,7 @@ import {
 import { Context, HttpError } from "./context.ts";
 import { compose, Middleware } from "./middleware.ts";
 
-const fallback: Middleware = (ctx) => ctx.throw("Not Found", { status: 404 });
+const fallback: Middleware = (ctx) => ctx.throw(404, "Not Found");
 
 export class Application {
   #middlewares = [fallback];

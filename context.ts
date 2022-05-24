@@ -18,16 +18,22 @@ export class Context {
 
   assert(
     cond: unknown,
+    status: number,
     message?: string,
     init: ResponseInit = {},
   ): asserts cond {
     if (cond) return;
-    this.throw(message, init);
+    this.throw(status, message, init);
   }
 
-  throw(message?: string, init: ResponseInit = {}) {
+  throw(
+    status: number,
+    message?: string,
+    init: ResponseInit = {},
+  ) {
     const error = new HttpError(message);
-    if (init.status) error.status = init.status;
+    error.status = status;
+    if (!init.status) init.status = status;
     error.expose = error.status < 500 ? true : false;
     error.init = init;
     throw error;
