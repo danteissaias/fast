@@ -5,8 +5,10 @@ import {
 import { Context, HttpError } from "./context.ts";
 import { compose, Middleware } from "./middleware.ts";
 
+const fallback: Middleware = (ctx) => ctx.throw("Not Found", { status: 404 });
+
 export class Application {
-  #middlewares: Middleware[] = [(ctx) => ctx.throw(404, "Not Found")];
+  #middlewares = [fallback];
 
   use(...middlewares: Middleware[]) {
     this.#middlewares.splice(-1, 0, ...middlewares);
@@ -25,11 +27,12 @@ export class Application {
     const hostname = opts.hostname ?? "0.0.0.0";
     const handler = this.handle.bind(this);
     const onError = opts.onError ??
-      ((err) => {
-        console.log(err);
-        const { message = "Internal Server Error", status = 500 } =
-          err instanceof HttpError ? err : {};
-        return Response.json({ message }, { status });
+      ((error) => {
+        console.log(error);
+        const { message, init } = error instanceof HttpError
+          ? error
+          : { message: "Internal Server Error", init: { status: 500 } };
+        return Response.json({ message }, init);
       });
     const server = new Server({ port, hostname, handler, onError });
     const s = server.listenAndServe();
