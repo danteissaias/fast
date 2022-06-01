@@ -3,7 +3,7 @@
 [![test](https://github.com/danteissaias/fast/actions/workflows/test.yml/badge.svg)](https://github.com/danteissaias/fast/actions/workflows/test.yml)
 [![deno doc](https://doc.deno.land/badge.svg)](https://doc.deno.land/https://deno.land/x/fast/mod.ts)
 
-Middleware and routing framework for Deno.
+Fast middleware framework for Deno.
 
 ### Example server
 
@@ -17,5 +17,5 @@ router.get("/", (ctx) => "Hello, World!");
 
 const app = new Application();
 app.use(router);
-app.listen({ port: 8080 });
+app.serve({ port: 8080 });
 ```

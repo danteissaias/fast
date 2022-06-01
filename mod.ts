@@ -3,7 +3,7 @@
  *
  * ### Example server
  *
- * A minimal router server which responds on `/`.
+ * A minimal server using the router middleware.
  *
  * ```ts
  * import { Application, Router } from "https://deno.land/x/fast/mod.ts";
@@ -13,7 +13,7 @@
  *
  * const app = new Application();
  * app.use(router);
- * app.listen({ port: 8080 });
+ * app.serve({ port: 8080 });
  * ```
  *
  * @module
