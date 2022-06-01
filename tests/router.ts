@@ -1,6 +1,6 @@
+import { assertEquals } from "https://deno.land/std@0.140.0/testing/asserts.ts";
 import { Application } from "../application.ts";
 import { Router } from "../router.ts";
-import { assertEquals } from "https://deno.land/std@0.140.0/testing/asserts.ts";
 
 Deno.test("router - hello world", async () => {
   const app = new Application();
