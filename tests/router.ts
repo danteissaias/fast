@@ -6,7 +6,7 @@ Deno.test("router - hello world", async () => {
   const app = new Application();
   const router = new Router();
   router.get("/", () => "hello world");
-  app.use(router.routes);
+  app.use(router);
   const req = new Request("http://localhost:8000/");
   const res = await app.handle(req);
   assertEquals(res.status, 200);
@@ -18,7 +18,7 @@ Deno.test("router - prefix", async () => {
   const app = new Application();
   const router = new Router({ prefix: "/api" });
   router.get("/", () => "hello world");
-  app.use(router.routes);
+  app.use(router);
   const req = new Request("http://localhost:8000/api");
   const res = await app.handle(req);
   assertEquals(res.status, 200);
@@ -31,7 +31,7 @@ Deno.test("router - preflight", async () => {
   const router = new Router();
   router.get("/", () => "hello world");
   router.post("/", () => "hello world");
-  app.use(router.routes);
+  app.use(router);
   const req = new Request("http://localhost:8000/", { method: "OPTIONS" });
   const res = await app.handle(req);
   assertEquals(res.status, 204);

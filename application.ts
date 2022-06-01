@@ -4,14 +4,17 @@ import {
 } from "https://deno.land/std@0.140.0/http/server.ts";
 import { Context, HttpError } from "./context.ts";
 import { compose, Middleware } from "./middleware.ts";
+import { Router } from "./router.ts";
 
 const fallback: Middleware = (ctx) => ctx.throw(404, "Not Found");
 
 export class Application {
   #middlewares = [fallback];
 
-  use(...middlewares: Middleware[]) {
-    this.#middlewares.splice(-1, 0, ...middlewares);
+  use(...middlewares: (Middleware | Router)[]) {
+    const convert = (m: Middleware | Router) =>
+      m instanceof Router ? m.routes : m;
+    this.#middlewares.splice(-1, 0, ...middlewares.map(convert));
     return this;
   }
 
