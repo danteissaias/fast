@@ -4,7 +4,7 @@ import { Router } from "./router.ts";
 const app = new Application();
 const router = new Router();
 
-app.use(router.routes());
+app.use(router.routes);
 
 router.get("/", () => "hello world");
 router.post("/", () => "hello world");

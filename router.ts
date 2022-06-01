@@ -1,3 +1,4 @@
+import { Context } from "./context.ts";
 import { compose, Middleware } from "./middleware.ts";
 
 type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD" | "OPTIONS";
@@ -82,11 +83,6 @@ export class Router {
     return this.#routes.find(matches);
   }
 
-  #allowed(pathname: string) {
-    const matches = (r: Route) => r.pathname === pathname;
-    return this.#routes.filter(matches).map((r) => r.method);
-  }
-
   #match(pathname: string, method: Method) {
     const id = method + pathname;
     const hit = this.#cache.get(id);
@@ -101,24 +97,26 @@ export class Router {
     }
   }
 
-  routes(): Middleware {
-    return (ctx, next) => {
-      const [url, method] = [ctx.url, ctx.request.method as Method];
-      const match = this.#match(url.pathname, method);
-      if (!match) return next(ctx);
-      if (match.route) {
-        const { res, route } = match;
-        ctx.params = res.pathname.groups;
-        return compose(route.middlewares)(ctx);
-      } else {
-        const methods = this.#allowed(match.pattern.pathname);
-        if (!methods.length) return next(ctx);
-        const headers = new Headers();
-        headers.set("Allow", methods.toString());
-        return method === "OPTIONS"
-          ? new Response(null, { status: 204, headers })
-          : ctx.throw(405, "Method Not Allowed", { headers });
-      }
-    };
-  }
+  #preflight: Middleware = (ctx: Context, next) => {
+    const [url, method] = [ctx.url, ctx.request.method as Method];
+    const match = this.#match(url.pathname, method);
+    if (!match || match.route) return next(ctx);
+    const isPreflight = ctx.request.method === "OPTIONS";
+    ctx.assert(isPreflight, 405, "Method Not Allowed");
+    const methods = this.#routes
+      .filter((r: Route) => r.pathname === match.pattern.pathname)
+      .map((r) => r.method)
+      .toString();
+    return new Response(null, { status: 204, headers: { allow: methods } });
+  };
+
+  routes: Middleware = (ctx, next) => {
+    const [url, method] = [ctx.url, ctx.request.method as Method];
+    const match = this.#match(url.pathname, method);
+    if (!match) return next(ctx);
+    if (!match.route) return this.#preflight(ctx, next);
+    const { res, route } = match;
+    ctx.params = res.pathname.groups;
+    return compose(route.middlewares)(ctx);
+  };
 }
