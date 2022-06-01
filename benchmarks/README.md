@@ -1,4 +1,6 @@
 Deno:
+
+```
 anon@mini:~/repos/fast$ wrk -t12 -c400 -d30s http://127.0.0.1:8000
 Running 30s test @ http://127.0.0.1:8000
   12 threads and 400 connections
@@ -9,8 +11,11 @@ Running 30s test @ http://127.0.0.1:8000
   Socket errors: connect 0, read 501, write 26, timeout 0
 Requests/sec: 106046.54
 Transfer/sec:     15.17MB
+```
 
 Application:
+
+```
 anon@mini:~/repos/fast$ wrk -t12 -c400 -d30s http://127.0.0.1:8000
 Running 30s test @ http://127.0.0.1:8000
   12 threads and 400 connections
@@ -21,8 +26,12 @@ Running 30s test @ http://127.0.0.1:8000
   Socket errors: connect 0, read 621, write 2, timeout 0
 Requests/sec: 105246.48
 Transfer/sec:     15.06MB
+```
 
 Application + Router:
+
+```
+anon@mini:~/repos/fast$ wrk -t12 -c400 -d30s http://127.0.0.1:8000
 Running 30s test @ http://127.0.0.1:8000
   12 threads and 400 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
@@ -32,3 +41,4 @@ Running 30s test @ http://127.0.0.1:8000
   Socket errors: connect 0, read 647, write 0, timeout 0
 Requests/sec: 100393.14
 Transfer/sec:     14.36MB
+```
