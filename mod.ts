@@ -1,9 +1,9 @@
 /**
- * Fast middleware framework for Deno.
+ * Fast middleware framework for Deno
  *
  * ### Example server
  *
- * A minimal server using the router middleware.
+ * A minimal server using the router middleware
  *
  * ```ts
  * import { Application, Router } from "https://deno.land/x/fast/mod.ts";
