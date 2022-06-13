@@ -1,122 +1,82 @@
-import { Context } from "./context.ts";
 import { compose, Middleware } from "./middleware.ts";
 
 type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD" | "OPTIONS";
 
 interface Route {
-  pathname: string;
-  method: Method;
-  middlewares: Middleware[];
-}
-
-interface RouteMatch {
-  route: Route;
-  res: URLPatternResult;
   pattern: URLPattern;
+  middlewares: Partial<Record<string, Middleware[]>>;
 }
 
-interface RouterInit {
-  prefix: string;
+interface Match {
+  params?: Record<string, string>;
+  middlewares: Middleware[];
 }
 
 export class Router {
   #routes: Route[];
-  #patterns: Set<URLPattern>;
-  #cache: Map<string, RouteMatch>;
-  #prefix?: string;
+  #cache: Record<string, Match | null>;
 
-  constructor(init: Partial<RouterInit> = {}) {
-    this.#prefix = init.prefix;
+  constructor() {
     this.#routes = [];
-    this.#patterns = new Set();
-    this.#cache = new Map();
+    this.#cache = {};
   }
 
-  get(pathname: string, ...middlewares: Middleware[]) {
+  get = (pathname: string, ...middlewares: Middleware[]) =>
     this.#add(pathname, middlewares, "GET");
-    return this;
-  }
 
-  post(pathname: string, ...middlewares: Middleware[]) {
+  post = (pathname: string, ...middlewares: Middleware[]) =>
     this.#add(pathname, middlewares, "POST");
-    return this;
-  }
 
-  put(pathname: string, ...middlewares: Middleware[]) {
+  put = (pathname: string, ...middlewares: Middleware[]) =>
     this.#add(pathname, middlewares, "PUT");
-    return this;
-  }
 
-  patch(pathname: string, ...middlewares: Middleware[]) {
+  patch = (pathname: string, ...middlewares: Middleware[]) =>
     this.#add(pathname, middlewares, "PATCH");
-    return this;
-  }
 
-  delete(pathname: string, ...middlewares: Middleware[]) {
+  delete = (pathname: string, ...middlewares: Middleware[]) =>
     this.#add(pathname, middlewares, "DELETE");
-    return this;
-  }
 
-  head(pathname: string, ...middlewares: Middleware[]) {
+  head = (pathname: string, ...middlewares: Middleware[]) =>
     this.#add(pathname, middlewares, "HEAD");
-    return this;
-  }
 
-  options(pathname: string, ...middlewares: Middleware[]) {
+  options = (pathname: string, ...middlewares: Middleware[]) =>
     this.#add(pathname, middlewares, "OPTIONS");
-    return this;
-  }
 
   #add(pathname: string, middlewares: Middleware[], method: Method) {
-    const isRoot = pathname === "/";
-    const prefix = this.#prefix;
-    if (prefix) pathname = isRoot ? prefix : prefix + pathname;
-    const current = this.#find(pathname, method);
-    if (current) return current.middlewares.push(...middlewares);
-    this.#routes.push({ pathname, middlewares, method });
-    this.#patterns.add(new URLPattern({ pathname }));
+    const route = this.#find(pathname);
+    if (!route) {
+      const pattern = new URLPattern({ pathname });
+      this.#routes.push({ pattern, middlewares: { [method]: middlewares } });
+    } else if (route.middlewares[method]) {
+      route.middlewares[method]!.push(...middlewares);
+    } else route.middlewares[method] = middlewares;
+    return this;
   }
 
-  #find(pathname: string, method: Method) {
-    const matches = (r: Route) =>
-      r.method === method && r.pathname === pathname;
-    return this.#routes.find(matches);
+  #find = (pathname: string) =>
+    this.#routes.find((r) => r.pattern.test({ pathname }));
+
+  match(pathname: string, method: string): Match | null {
+    const id = pathname + method;
+    if (this.#cache[id]) return this.#cache[id];
+    const route = this.#find(pathname);
+    if (!route) return this.#cache[id] = null;
+    const middlewares = route.middlewares[method];
+    if (!middlewares) return this.#cache[id] = null;
+    const { pattern } = route;
+    if (route.pattern.pathname.includes(":")) {
+      const params = pattern.exec({ pathname })!.pathname.groups;
+      return this.#cache[id] = { params, middlewares };
+    } else return this.#cache[id] = { middlewares };
   }
 
-  #match(pathname: string, method: Method) {
-    const id = method + pathname;
-    const hit = this.#cache.get(id);
-    if (hit) return hit;
-    for (const pattern of this.#patterns) {
-      const res = pattern.exec({ pathname });
-      if (!res) continue;
-      const route = this.#find(pattern.pathname, method)!;
-      const match = { res, route, pattern };
-      this.#cache.set(id, match);
-      return match;
-    }
-  }
-
-  #preflight: Middleware = (ctx: Context, next) => {
-    const [url, method] = [ctx.url, ctx.request.method as Method];
-    const match = this.#match(url.pathname, method);
-    if (!match || match.route) return next(ctx);
-    const isPreflight = ctx.request.method === "OPTIONS";
-    ctx.assert(isPreflight, 405, "Method Not Allowed");
-    const methods = this.#routes
-      .filter((r: Route) => r.pathname === match.pattern.pathname)
-      .map((r) => r.method)
-      .toString();
-    return new Response(null, { status: 204, headers: { allow: methods } });
-  };
-
-  routes: Middleware = (ctx, next) => {
-    const [url, method] = [ctx.url, ctx.request.method as Method];
-    const match = this.#match(url.pathname, method);
+  // TODO(danteissaias): Method not allowed
+  // TODO(danteissaias): Handle OPTIONS requests
+  // TODO(danteissaias): Handle HEAD requests
+  handle: Middleware = (ctx, next) => {
+    const match = this.match(ctx.url.pathname, ctx.request.method);
     if (!match) return next(ctx);
-    if (!match.route) return this.#preflight(ctx, next);
-    const { res, route } = match;
-    ctx.params = res.pathname.groups;
-    return compose(route.middlewares)(ctx);
+    if (match.params) ctx.params = match.params;
+    return compose(match.middlewares)(ctx);
   };
 }
