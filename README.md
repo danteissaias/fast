@@ -11,7 +11,7 @@ import { Application, Router } from "https://deno.land/x/fast/mod.ts";
 const app = new Application();
 
 app.get("/", () => {
-  return "Hello, World!";
+  return new Response("Hello, World!");
 });
 
 app.serve({ port: 8080 });
