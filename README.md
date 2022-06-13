@@ -10,8 +10,10 @@ import { serve } from "https://deno.land/std@0.143.0/http/server.ts";
 import { Application, Router } from "https://deno.land/x/fast/mod.ts";
 
 const app = new Application();
+const router = new Router();
+app.use(router.handle);
 
-app.get("/", () => {
+router.get("/", () => {
   return new Response("Hello, World!");
 });
 

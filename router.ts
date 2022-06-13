@@ -73,6 +73,7 @@ export class Router {
   // TODO(danteissaias): Method not allowed
   // TODO(danteissaias): Handle OPTIONS requests
   // TODO(danteissaias): Handle HEAD requests
+  // TODO(danteissaias): Cross-origin resource sharing
   handle: Middleware = (ctx, next) => {
     const match = this.match(ctx.url.pathname, ctx.request.method);
     if (!match) return next(ctx);
