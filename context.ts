@@ -47,8 +47,7 @@ export class Context {
     return this.#url ?? (this.#url = new URL(this.request.url));
   }
 
-  next = (): Promise<Response> =>
-    Promise.resolve(this.#middlewares[++this.#current](this));
+  next = async () => await this.#middlewares[++this.#current](this);
 
   clone({
     request = this.request,

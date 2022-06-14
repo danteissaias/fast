@@ -15,5 +15,5 @@ Deno.test("method not allowed", async () => {
   const req = new Request("http://localhost:8000/");
   const res = await app.handle(req);
   assertEquals(res.status, 405);
-  assertEquals(await res.text(), "Method Not Allowed");
+  assertEquals(await res.json(), { message: "Method Not Allowed" });
 });
