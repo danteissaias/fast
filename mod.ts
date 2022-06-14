@@ -1,28 +1,22 @@
 /**
- * Fast middleware framework for Deno
- *
- * ### Example server
- *
- * A minimal server using the router middleware
+ * Minimalist web framework for Deno.
  *
  * ```ts
- * import { Application, Router } from "https://deno.land/x/fast/mod.ts";
- *
- * const router = new Router();
- * router.get("/", (ctx) => "Hello, World!");
+ * import { serve } from "https://deno.land/std@0.143.0/http/server.ts";
+ * import { Application } from "https://deno.land/x/fast/mod.ts";
  *
  * const app = new Application();
- * app.use(router);
- * app.serve({ port: 8080 });
+ *
+ * app.get("/", () => {
+ *   return new Response("Hello, World!");
+ * });
+ *
+ * await serve(app.handle);
  * ```
  *
  * @module
  */
 export { Application } from "./application.ts";
 export { Context, HttpError } from "./context.ts";
-export type {
-  Middleware,
-  MiddlewareResponse,
-  NextFunction,
-} from "./middleware.ts";
+export type { Middleware, NextFunction } from "./middleware.ts";
 export { Router } from "./router.ts";
