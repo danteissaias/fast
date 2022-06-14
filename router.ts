@@ -10,7 +10,13 @@ interface Route {
 interface Match {
   params?: Record<string, string>;
   middlewares: Middleware[];
+  route: Route;
 }
+
+const allowedMethods = (route: Route) => {
+  const methods = Object.keys(route.middlewares).concat("OPTIONS");
+  return methods.join(", ");
+};
 
 export class Router {
   #routes: Route[];
@@ -61,23 +67,25 @@ export class Router {
     if (this.#cache[id]) return this.#cache[id];
     const route = this.#find(pathname);
     if (!route) return this.#cache[id] = null;
-    const middlewares = route.middlewares[method];
-    if (!middlewares) return this.#cache[id] = null;
+    const middlewares = route.middlewares[method] ?? [];
     const { pattern } = route;
     if (route.pattern.pathname.includes(":")) {
       const params = pattern.exec({ pathname })!.pathname.groups;
-      return this.#cache[id] = { params, middlewares };
-    } else return this.#cache[id] = { middlewares };
+      return this.#cache[id] = { params, middlewares, route };
+    } else return this.#cache[id] = { middlewares, route };
   }
 
-  // TODO(danteissaias): Method not allowed
-  // TODO(danteissaias): Handle OPTIONS requests
   // TODO(danteissaias): Handle HEAD requests
   // TODO(danteissaias): Cross-origin resource sharing
   handle: Middleware = (ctx) => {
     const match = this.match(ctx.url.pathname, ctx.request.method);
     if (!match) return ctx.next();
-    const { params, middlewares } = match;
-    return ctx.clone({ params, middlewares }).next();
+    const { params, middlewares, route } = match;
+    const headers = { allow: allowedMethods(route) };
+    if (ctx.request.method === "OPTIONS") {
+      return new Response(null, { status: 204, headers });
+    } else if (!middlewares.length) {
+      return new Response("Method Not Allowed", { status: 405, headers });
+    } else return ctx.clone({ params, middlewares }).next();
   };
 }
