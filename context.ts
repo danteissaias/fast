@@ -2,6 +2,13 @@ export type Middleware = (
   ctx: Context,
 ) => Response | Promise<Response>;
 
+export function toResponse(err: Error | HttpError) {
+  const e = err instanceof HttpError
+    ? err
+    : new HttpError(500, "Internal Server Error");
+  return Response.json({ message: e.message }, e.init);
+}
+
 export class HttpError extends Error {
   expose: boolean;
   init: ResponseInit;
@@ -40,7 +47,8 @@ export class Context {
     return this.#url ?? (this.#url = new URL(this.request.url));
   }
 
-  next = () => this.#middlewares[++this.#current](this);
+  next = (): Promise<Response> =>
+    Promise.resolve(this.#middlewares[++this.#current](this));
 
   clone({
     request = this.request,

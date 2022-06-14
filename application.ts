@@ -1,5 +1,5 @@
-import { Context, type Middleware } from "./context.ts";
-import { Router } from "./router.ts";
+import { Context, type Middleware, toResponse } from "./context.ts";
+import { Router } from "./mod.ts";
 
 const fallback = () => new Response("Not Found", { status: 404 });
 
@@ -29,13 +29,13 @@ export class Application {
     this.#router.options(pathname, ...middlewares);
 
   use(...middlewares: Middleware[]) {
-    this.#middlewares.splice(-1, 0, ...middlewares);
+    this.#middlewares.splice(-2, 0, ...middlewares);
     return this;
   }
 
   handle = async (request: Request) => {
     const middlewares = this.#middlewares;
     const ctx = new Context({ request, middlewares });
-    return await ctx.next();
+    return await ctx.next().catch(toResponse);
   };
 }

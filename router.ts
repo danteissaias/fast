@@ -1,4 +1,4 @@
-import type { Middleware } from "./context.ts";
+import { Context, type Middleware } from "./context.ts";
 
 type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD" | "OPTIONS";
 
@@ -12,11 +12,6 @@ interface Match {
   middlewares: Middleware[];
   route: Route;
 }
-
-const allowedMethods = (route: Route) => {
-  const methods = Object.keys(route.middlewares).concat("OPTIONS");
-  return methods.join(", ");
-};
 
 export class Router {
   #routes: Route[];
@@ -75,17 +70,11 @@ export class Router {
     } else return this.#cache[id] = { middlewares, route };
   }
 
-  // TODO(danteissaias): Handle HEAD requests
-  // TODO(danteissaias): Cross-origin resource sharing
-  handle: Middleware = (ctx) => {
+  handle: Middleware = (ctx: Context) => {
     const match = this.match(ctx.url.pathname, ctx.request.method);
     if (!match) return ctx.next();
-    const { params, middlewares, route } = match;
-    const headers = { allow: allowedMethods(route) };
-    if (ctx.request.method === "OPTIONS") {
-      return new Response(null, { status: 204, headers });
-    } else if (!middlewares.length) {
-      return new Response("Method Not Allowed", { status: 405, headers });
-    } else return ctx.clone({ params, middlewares }).next();
+    ctx.assert(match.middlewares.length, 405, "Method Not Allowed");
+    const { params, middlewares } = match;
+    return ctx.clone({ params, middlewares }).next();
   };
 }
