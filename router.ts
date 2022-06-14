@@ -1,4 +1,4 @@
-import { compose, Middleware } from "./middleware.ts";
+import type { Middleware } from "./context.ts";
 
 type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD" | "OPTIONS";
 
@@ -74,10 +74,10 @@ export class Router {
   // TODO(danteissaias): Handle OPTIONS requests
   // TODO(danteissaias): Handle HEAD requests
   // TODO(danteissaias): Cross-origin resource sharing
-  handle: Middleware = (ctx, next) => {
+  handle: Middleware = (ctx) => {
     const match = this.match(ctx.url.pathname, ctx.request.method);
-    if (!match) return next(ctx);
-    if (match.params) ctx.params = match.params;
-    return compose(match.middlewares)(ctx);
+    if (!match) return ctx.next();
+    const { params, middlewares } = match;
+    return ctx.clone({ params, middlewares }).next();
   };
 }

@@ -1,17 +1,11 @@
-import { Context } from "./context.ts";
-import { compose, Middleware } from "./middleware.ts";
+import { Context, type Middleware } from "./context.ts";
 import { Router } from "./router.ts";
 
 const fallback = () => new Response("Not Found", { status: 404 });
 
 export class Application {
-  #router: Router;
-  #middlewares: Middleware[] = [fallback];
-
-  constructor() {
-    this.#router = new Router();
-    this.use(this.#router.handle);
-  }
+  #router = new Router();
+  #middlewares: Middleware[] = [this.#router.handle, fallback];
 
   get = (pathname: string, ...middlewares: Middleware[]) =>
     this.#router.get(pathname, ...middlewares);
@@ -40,8 +34,8 @@ export class Application {
   }
 
   handle = async (request: Request) => {
-    const ctx = new Context(request);
-    const next = compose(this.#middlewares);
-    return await next(ctx);
+    const middlewares = this.#middlewares;
+    const ctx = new Context({ request, middlewares });
+    return await ctx.next();
   };
 }

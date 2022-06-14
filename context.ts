@@ -1,41 +1,63 @@
+export type Middleware = (
+  ctx: Context,
+) => Response | Promise<Response>;
+
 export class HttpError extends Error {
-  expose = false;
-  status = 500;
-  init: ResponseInit = {};
+  expose: boolean;
+  init: ResponseInit;
+
+  constructor(
+    status: number,
+    message?: string,
+    init: ResponseInit = { status },
+  ) {
+    super(message);
+    this.init = init;
+    this.expose = status >= 500 ? true : false;
+  }
+}
+
+interface ContextInit {
+  request: Request;
+  middlewares: Middleware[];
+  params?: Record<string, string>;
 }
 
 export class Context {
   #url?: URL;
+  request: Request;
+  params: Record<string, string>;
+  #middlewares: Middleware[];
+  #current = -1;
 
-  constructor(
-    readonly request: Request,
-    public params: Record<string, string> = {},
-  ) {}
+  constructor({ request, middlewares, params = {} }: ContextInit) {
+    this.request = request;
+    this.params = params;
+    this.#middlewares = middlewares;
+  }
 
   get url() {
     return this.#url ?? (this.#url = new URL(this.request.url));
+  }
+
+  next = () => this.#middlewares[++this.#current](this);
+
+  clone({
+    request = this.request,
+    middlewares = [],
+    params = this.params,
+  }: Partial<ContextInit>) {
+    middlewares = middlewares.concat(this.#middlewares);
+    return new Context({ request, middlewares, params });
   }
 
   assert(
     cond: unknown,
     status: number,
     message?: string,
-    init: ResponseInit = {},
+    init: ResponseInit = { status },
   ): asserts cond {
     if (cond) return;
-    this.throw(status, message, init);
-  }
-
-  throw(
-    status: number,
-    message?: string,
-    init: ResponseInit = {},
-  ) {
-    const error = new HttpError(message);
-    error.status = status;
-    if (!init.status) init.status = status;
-    error.expose = error.status < 500 ? true : false;
-    error.init = init;
-    throw error;
+    throw new HttpError(status, message, init);
   }
 }

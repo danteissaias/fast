@@ -3,22 +3,14 @@ import { Application, Router } from "./mod.ts";
 const app1 = new Application();
 const app2 = new Application();
 const router = new Router();
-router.get("/", () => new Response("Hello, World!"));
+for (let i = 0; i < 999; i++) router.get("/" + i, () => new Response(`${i}`));
 app2.use(router.handle);
 
-const r = new Request("http://localhost:8000/");
+const r = new Request("http://localhost:8000/582");
 
 Deno.bench({
   name: "app",
   fn() {
     app1.handle(r);
-  },
-});
-
-Deno.bench({
-  name: "app with router",
-  baseline: true,
-  fn() {
-    app2.handle(r);
   },
 });
