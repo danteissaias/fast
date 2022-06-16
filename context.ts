@@ -13,7 +13,7 @@ export class HttpError extends Error {
   ) {
     super(message);
     this.init = init;
-    this.expose = status >= 500 ? true : false;
+    this.expose = status >= 500 ? false : true;
   }
 }
 
