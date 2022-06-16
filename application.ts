@@ -34,7 +34,7 @@ export class Application {
   }
 
   #convert = ({ message, init = { status: 500 }, expose = false }: HttpError) =>
-    new Response(expose ? "Internal Server Error" : message, init);
+    new Response(expose ? message : "Internal Server Error", init);
 
   handle = async (request: Request) => {
     const middlewares = this.#middlewares;
