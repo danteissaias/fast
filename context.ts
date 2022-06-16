@@ -2,13 +2,6 @@ export type Middleware = (
   ctx: Context,
 ) => Response | Promise<Response>;
 
-export function toResponse(err: Error | HttpError) {
-  const e = err instanceof HttpError
-    ? err
-    : new HttpError(500, "Internal Server Error");
-  return Response.json({ message: e.message }, e.init);
-}
-
 export class HttpError extends Error {
   expose: boolean;
   init: ResponseInit;
