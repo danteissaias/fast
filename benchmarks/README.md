@@ -1,9 +1,9 @@
 # Benchmarks
 
-| Module                                                                       | Version | Requests/sec | Percentage |
-| ---------------------------------------------------------------------------- | ------: | -----------: | ---------: |
-| [Deno](https://github.com/danteissaias/fast/blob/0.0.19/benchmarks/deno.ts)  | 0.144.0 |    110411.23 |    100.00% |
-| [Fast](https://github.com/fastrodev/fastro/blob/0.0.19/benchmarks/fastro.ts) |  0.19.0 |    108117.85 |     97.92% |
+| Module                                                                      | Version | Requests/sec | Percentage |
+| --------------------------------------------------------------------------- | ------: | -----------: | ---------: |
+| [Deno](https://github.com/danteissaias/fast/blob/0.0.20/benchmarks/deno.ts) | 0.144.0 |    110411.23 |    100.00% |
+| [Fast](https://github.com/danteissaias/fast/blob/0.0.20/benchmarks/fast.ts) |  0.19.0 |    108117.85 |     97.92% |
 
 ## Deno
 
