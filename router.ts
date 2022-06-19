@@ -54,27 +54,26 @@ export class Router {
     return this;
   }
 
-  #find = (pathname: string) =>
-    this.#routes.find((r) => r.pattern.test({ pathname }));
+  #find = (url: string) => this.#routes.find((r) => r.pattern.test(url));
 
-  match(pathname: string, method: string): Match | null {
-    const id = pathname + method;
+  match(url: string, method: string) {
+    const id = url + method;
     if (this.#cache[id]) return this.#cache[id];
-    const route = this.#find(pathname);
+    const route = this.#find(url);
     if (!route) return this.#cache[id] = null;
     const middlewares = route.middlewares[method] ?? [];
     const { pattern } = route;
     if (route.pattern.pathname.includes(":")) {
-      const params = pattern.exec({ pathname })!.pathname.groups;
+      const params = pattern.exec(url)!.pathname.groups;
       return this.#cache[id] = { params, middlewares, route };
     } else return this.#cache[id] = { middlewares, route };
   }
 
   handle: Middleware = (ctx: Context) => {
-    const match = this.match(ctx.url.pathname, ctx.request.method);
+    const match = this.match(ctx.request.url, ctx.request.method);
     if (!match) return ctx.next();
     ctx.assert(match.middlewares.length, 405, "Method Not Allowed");
     const { params, middlewares } = match;
-    return ctx.clone({ params, middlewares }).next();
+    return ctx.clone({ middlewares, params }).next();
   };
 }

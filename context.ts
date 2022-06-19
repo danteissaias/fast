@@ -25,8 +25,8 @@ interface ContextInit {
 
 export class Context {
   #url?: URL;
-  request: Request;
-  params: Record<string, string>;
+  readonly request: Request;
+  readonly params: Record<string, string>;
   #middlewares: Middleware[];
   #current = -1;
 
