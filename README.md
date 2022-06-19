@@ -7,7 +7,7 @@ Minimalist web framework for [Deno](https://deno.land)
 [![deno module](https://shield.deno.dev/x/fast)](https://deno.land/x/fast)
 
 ```ts
-import { serve } from "https://deno.land/std@0.143.0/http/server.ts";
+import { serve } from "https://deno.land/std/http/server.ts";
 import { Application } from "https://deno.land/x/fast/mod.ts";
 
 const app = new Application();
