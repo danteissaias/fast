@@ -52,7 +52,6 @@ export class Router {
     } else if (route.middlewares[method]) {
       route.middlewares[method]!.push(...middlewares);
     } else route.middlewares[method] = middlewares;
-    console.log(route);
     return this;
   }
 
