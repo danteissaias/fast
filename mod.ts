@@ -7,7 +7,7 @@
  *
  * const app = new Application();
  *
- * app.get("/", () => new Response("Hello, World!"));
+ * app.get("/", () => new "Hello, World!");
  *
  * await serve(app.handle);
  * ```
@@ -15,5 +15,6 @@
  * @module
  */
 export { Application } from "./application.ts";
-export { Context, HttpError, type Middleware } from "./context.ts";
+export { Context, HttpError } from "./context.ts";
+export type { Middleware, MiddlewareResponse } from "./middleware.ts";
 export { Router } from "./router.ts";

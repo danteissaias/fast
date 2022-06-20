@@ -12,7 +12,7 @@ import { Application } from "https://deno.land/x/fast/mod.ts";
 
 const app = new Application();
 
-app.get("/", () => new Response("Hello, World!"));
+app.get("/", () => "Hello, World!");
 
 await serve(app.handle);
 ```

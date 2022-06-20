@@ -1,4 +1,4 @@
-import { Middleware } from "./context.ts";
+import type { Middleware } from "./mod.ts";
 
 // Simple cross-origin resource sharing middleware
 export const cors: Middleware = async (ctx) => {

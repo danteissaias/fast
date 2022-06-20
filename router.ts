@@ -1,4 +1,5 @@
-import { Context, type Middleware } from "./context.ts";
+import { Context } from "./context.ts";
+import type { Middleware } from "./middleware.ts";
 
 type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD" | "OPTIONS";
 

@@ -1,6 +1,4 @@
-export type Middleware = (
-  ctx: Context,
-) => Response | Promise<Response>;
+import type { Middleware } from "./middleware.ts";
 
 export class HttpError extends Error {
   expose: boolean;
@@ -16,6 +14,24 @@ export class HttpError extends Error {
     this.expose = status >= 500 ? false : true;
   }
 }
+
+const isResponse = (res: unknown): res is Response => res instanceof Response;
+
+const isString = (res: unknown): res is string =>
+  Object.prototype.toString.call(res) === "[object String]";
+
+const isEmpty = (res: unknown): res is null | void =>
+  (res !== 0 && !res) || res === null || res === undefined;
+
+const isJSON = (res: unknown) => {
+  try {
+    const s = JSON.stringify(res);
+    JSON.parse(s);
+    return true;
+  } catch {
+    return false;
+  }
+};
 
 interface ContextInit {
   request: Request;
@@ -40,7 +56,16 @@ export class Context {
     return this.#url ?? (this.#url = new URL(this.request.url));
   }
 
-  next = async () => await this.#middlewares[++this.#current](this);
+  async next() {
+    const cur = ++this.#current;
+    const handler = this.#middlewares[cur];
+    const res = await handler(this);
+    if (isResponse(res)) return res;
+    if (isString(res)) return new Response(res);
+    if (isJSON(res)) return Response.json(res);
+    if (isEmpty(res)) return new Response(null, { status: 204 });
+    throw new Error("Invalid response.");
+  }
 
   clone({
     request = this.request,

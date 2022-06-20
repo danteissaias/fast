@@ -1,4 +1,5 @@
-import { Context, HttpError, type Middleware } from "./context.ts";
+import { Context, HttpError } from "./context.ts";
+import type { Middleware } from "./middleware.ts";
 import { Router } from "./mod.ts";
 
 const fallback = () => new Response("Not Found", { status: 404 });
