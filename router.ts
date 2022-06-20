@@ -45,22 +45,21 @@ export class Router {
     this.#add(pathname, middlewares, "OPTIONS");
 
   #add(pathname: string, middlewares: Middleware[], method: Method) {
-    const route = this.#find(pathname);
+    const route = this.#routes.find((r) => r.pattern.test({ pathname }));
     if (!route) {
       const pattern = new URLPattern({ pathname });
       this.#routes.push({ pattern, middlewares: { [method]: middlewares } });
     } else if (route.middlewares[method]) {
       route.middlewares[method]!.push(...middlewares);
     } else route.middlewares[method] = middlewares;
+    console.log(route);
     return this;
   }
-
-  #find = (url: string) => this.#routes.find((r) => r.pattern.test(url));
 
   match(url: string, method: string) {
     const id = url + method;
     if (this.#cache[id]) return this.#cache[id];
-    const route = this.#find(url);
+    const route = this.#routes.find((r) => r.pattern.test(url));
     if (!route) return this.#cache[id] = null;
     const middlewares = route.middlewares[method] ?? [];
     const { pattern } = route;
