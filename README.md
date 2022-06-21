@@ -8,9 +8,9 @@ Minimalist web framework for [Deno](https://deno.land)
 
 ```ts
 import { serve } from "https://deno.land/std/http/server.ts";
-import { Application } from "https://deno.land/x/fast/mod.ts";
+import { application } from "https://deno.land/x/fast/mod.ts";
 
-const app = new Application();
+const app = application();
 
 app.get("/", () => "Hello, World!");
 
