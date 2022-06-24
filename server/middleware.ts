@@ -2,7 +2,7 @@ import type { Context } from "./context.ts";
 
 export type MiddlewareResponse =
   | string
-  | Record<string, unknown>
+  | unknown
   | Response;
 
 export type NextFunction = (
