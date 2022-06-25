@@ -41,7 +41,7 @@ export function router(): Router {
     method: HttpMethod,
     middlewares: Middleware[],
   ) => {
-    const route = routes.find((r) => r.pattern.test({ pathname }));
+    const route = routes.find((r) => r.pattern.pathname === pathname);
     if (!route) {
       const pattern = new URLPattern({ pathname });
       routes.push({ pattern, middlewares: { [method]: middlewares } });
