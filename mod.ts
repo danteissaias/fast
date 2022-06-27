@@ -118,10 +118,12 @@ export class Application {
     const middlewares = match
       ? match.middlewares.concat(this.#middlewares)
       : this.#middlewares;
-    return compose(middlewares)(ctx)
-      .catch(({ message, expose = false, init = { status: 500 } }) => {
-        if (!expose) message = "Internal Server Error";
-        return Response.json({ message }, init);
-      });
+    try {
+      return compose(middlewares)(ctx);
+    } catch (error) {
+      let { message, expose = false, init = { status: 500 } } = error;
+      if (!expose) message = "Internal Server Error";
+      return Response.json({ message }, init);
+    }
   }
 }
