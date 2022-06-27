@@ -14,6 +14,12 @@ interface ContextInit {
   params?: Record<string, string>;
 }
 
+interface ServerError {
+  message: string;
+  expose?: boolean;
+  init?: ResponseInit;
+}
+
 const createContext = ({ request, params = {} }: ContextInit): Context => ({
   request,
   params,
@@ -33,15 +39,26 @@ export type Middleware = (
   next: NextFunction,
 ) => Promise<unknown> | unknown;
 
+const decode = (res: unknown) => {
+  if (res instanceof Response) return res;
+  if (typeof res === "string") return new Response(res);
+  if (typeof res === "object") return Response.json(res);
+  throw new Error("Invalid response");
+};
+
 const compose = (middlewares: Middleware[]) => {
   let cur = -1;
-  return async function next(ctx: Context) {
+  let next: NextFunction;
+  return next = async (ctx) => {
     const res = await middlewares[++cur](ctx, next);
-    if (res instanceof Response) return res;
-    if (typeof res === "string") return new Response(res);
-    if (typeof res === "object") return Response.json(res);
-    ctx.assert(false, 500, "Invalid response");
+    return decode(res);
   };
+};
+
+const convert = (error: ServerError) => {
+  let { message, expose = false, init = { status: 500 } } = error;
+  if (!expose) message = "Internal Server Error";
+  return Response.json({ message }, init);
 };
 
 interface Match {
@@ -118,12 +135,6 @@ export class Application {
     const middlewares = match
       ? match.middlewares.concat(this.#middlewares)
       : this.#middlewares;
-    try {
-      return compose(middlewares)(ctx);
-    } catch (error) {
-      let { message, expose = false, init = { status: 500 } } = error;
-      if (!expose) message = "Internal Server Error";
-      return Response.json({ message }, init);
-    }
+    return compose(middlewares)(ctx).catch(convert);
   }
 }
