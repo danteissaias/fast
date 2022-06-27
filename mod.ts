@@ -61,6 +61,8 @@ const convert = (error: ServerError) => {
   return Response.json({ message }, init);
 };
 
+const fallback = () => new Response("Not Found", { status: 404 });
+
 interface Match {
   middlewares: Middleware[];
   params?: Record<string, string>;
@@ -83,20 +85,18 @@ export class Application {
   #cache: Record<string, Match | null>;
 
   constructor() {
-    this.#middlewares = [() => new Response("Not Found", { status: 404 })];
-    this.#routes = {};
+    this.#middlewares = [fallback];
     this.#patterns = [];
+    this.#routes = {};
     this.#cache = {};
 
     // Define methods
-    this.get = (p, ...m) => this.#add(p, "GET", m);
-    this.post = (p, ...m) => this.#add(p, "POST", m);
-    this.put = (p, ...m) => this.#add(p, "PUT", m);
-    this.patch = (p, ...m) => this.#add(p, "PATCH", m);
-    this.delete = (p, ...m) => this.#add(p, "DELETE", m);
-    this.options = (p, ...m) => this.#add(p, "OPTIONS", m);
-    this.head = (p, ...m) => this.#add(p, "HEAD", m);
-    this.handle = this.handle.bind(this);
+    // deno-fmt-ignore-line
+    const methods = ['get', 'post', 'put', 'patch', 'delete', 'options', 'head'] as const;
+    for (const method of methods) {
+      this[method] = (path, ...middlewares) =>
+        this.#add(path, method.toUpperCase(), middlewares);
+    }
   }
 
   #add(path: string, method: string, middlewares: Middleware[]) {
@@ -128,13 +128,14 @@ export class Application {
     return this;
   }
 
-  handle(request: Request) {
+  handle = (request: Request) => {
     const ctx = createContext({ request });
-    const match = this.#match(request.url, request.method);
+    const { url, method } = request;
+    const match = this.#match(url, method);
     ctx.params = match?.params ?? {};
     const middlewares = match
       ? match.middlewares.concat(this.#middlewares)
       : this.#middlewares;
     return compose(middlewares)(ctx).catch(convert);
-  }
+  };
 }
