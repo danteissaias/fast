@@ -43,7 +43,7 @@ export type NextFunction<S = DefaultState> = (
 
 export type Middleware<S = DefaultState> = (
   ctx: Context<S>,
-  next: NextFunction,
+  next: NextFunction<S>,
 ) => Promise<unknown> | unknown;
 
 const decode = (res: unknown) => {
