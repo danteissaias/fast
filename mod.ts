@@ -1,6 +1,8 @@
-export interface Context {
+// deno-lint-ignore no-explicit-any
+export interface Context<S = any> {
   request: Request;
   params: Record<string, string>;
+  state: S;
   assert(
     expr: unknown,
     status: number,
@@ -23,6 +25,7 @@ interface ServerError {
 const createContext = ({ request, params = {} }: ContextInit): Context => ({
   request,
   params,
+  state: {},
   assert(expr, status, message, init = { status }) {
     if (expr) return;
     init.status = status;
