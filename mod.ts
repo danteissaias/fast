@@ -92,7 +92,7 @@ export class Application<S> {
   #cache: Record<string, Match | null>;
 
   constructor() {
-    this.#middlewares = [fallback];
+    this.#middlewares = [];
     this.#patterns = new Set();
     this.#routes = {};
     this.#cache = {};
@@ -140,9 +140,10 @@ export class Application<S> {
     const { url, method } = request;
     const match = this.#match(url, method);
     ctx.params = match?.params ?? {};
-    const middlewares = match
-      ? match.middlewares.concat(this.#middlewares)
+    let middlewares = match
+      ? this.#middlewares.concat(match.middlewares)
       : this.#middlewares;
+    middlewares = middlewares.concat(fallback);
     return compose(middlewares)(ctx).catch(convert);
   };
 }
