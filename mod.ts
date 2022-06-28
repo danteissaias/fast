@@ -37,8 +37,8 @@ const createContext = <S = DefaultState>(
   },
 });
 
-export type NextFunction = (
-  ctx: Context,
+export type NextFunction<S = DefaultState> = (
+  ctx: Context<S>,
 ) => Promise<Response>;
 
 export type Middleware<S = DefaultState> = (
