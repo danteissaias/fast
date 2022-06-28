@@ -1,5 +1,7 @@
 // deno-lint-ignore no-explicit-any
-export interface Context<S = any> {
+type DefaultState = any;
+
+export interface Context<S = DefaultState> {
   request: Request;
   params: Record<string, string>;
   state: S;
@@ -22,10 +24,12 @@ interface ServerError {
   init?: ResponseInit;
 }
 
-const createContext = ({ request, params = {} }: ContextInit): Context => ({
+const createContext = <S = DefaultState>(
+  { request, params = {} }: ContextInit,
+): Context<S> => ({
   request,
   params,
-  state: {},
+  state: {} as S,
   assert(expr, status, message, init = { status }) {
     if (expr) return;
     init.status = status;
@@ -37,8 +41,8 @@ export type NextFunction = (
   ctx: Context,
 ) => Promise<Response>;
 
-export type Middleware = (
-  ctx: Context,
+export type Middleware<S = DefaultState> = (
+  ctx: Context<S>,
   next: NextFunction,
 ) => Promise<unknown> | unknown;
 
@@ -71,17 +75,17 @@ interface Match {
   params?: Record<string, string>;
 }
 
-export interface Application {
-  get(path: string, ...middlewares: Middleware[]): Application;
-  post(path: string, ...middlewares: Middleware[]): Application;
-  put(path: string, ...middlewares: Middleware[]): Application;
-  patch(path: string, ...middlewares: Middleware[]): Application;
-  delete(path: string, ...middlewares: Middleware[]): Application;
-  options(path: string, ...middlewares: Middleware[]): Application;
-  head(path: string, ...middlewares: Middleware[]): Application;
+export interface Application<S = DefaultState> {
+  get(path: string, ...middlewares: Middleware<S>[]): Application<S>;
+  post(path: string, ...middlewares: Middleware<S>[]): Application<S>;
+  put(path: string, ...middlewares: Middleware<S>[]): Application<S>;
+  patch(path: string, ...middlewares: Middleware<S>[]): Application<S>;
+  delete(path: string, ...middlewares: Middleware<S>[]): Application<S>;
+  options(path: string, ...middlewares: Middleware<S>[]): Application<S>;
+  head(path: string, ...middlewares: Middleware<S>[]): Application<S>;
 }
 
-export class Application {
+export class Application<S> {
   #middlewares: Middleware[];
   #patterns: Set<URLPattern>;
   #routes: Record<string, Middleware[]>;
@@ -126,13 +130,13 @@ export class Application {
     } else return this.#cache[id] = { middlewares };
   }
 
-  use(...middlewares: Middleware[]) {
+  use(...middlewares: Middleware<S>[]) {
     this.#middlewares.splice(0, 0, ...middlewares);
     return this;
   }
 
   handle = (request: Request) => {
-    const ctx = createContext({ request });
+    const ctx = createContext<S>({ request });
     const { url, method } = request;
     const match = this.#match(url, method);
     ctx.params = match?.params ?? {};
