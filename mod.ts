@@ -80,13 +80,13 @@ export interface Application {
 
 export class Application {
   #middlewares: Middleware[];
-  #patterns: URLPattern[];
+  #patterns: Set<URLPattern>;
   #routes: Record<string, Middleware[]>;
   #cache: Record<string, Match | null>;
 
   constructor() {
     this.#middlewares = [fallback];
-    this.#patterns = [];
+    this.#patterns = new Set();
     this.#routes = {};
     this.#cache = {};
 
@@ -104,7 +104,7 @@ export class Application {
     const route = this.#routes[id];
     if (route) route.push(...middlewares);
     const pattern = new URLPattern({ pathname: path });
-    if (!this.#patterns.includes(pattern)) this.#patterns.push(pattern);
+    this.#patterns.add(pattern);
     this.#routes[id] = middlewares;
     return this;
   }
@@ -113,7 +113,7 @@ export class Application {
     const id = method + url;
     const hit = this.#cache[id];
     if (hit) return hit;
-    const pattern = this.#patterns.find((p) => p.test(url));
+    const pattern = [...this.#patterns].find((p) => p.test(url));
     const middlewares = this.#routes[method + pattern?.pathname];
     if (!middlewares) return this.#cache[id] = null;
     if (pattern?.pathname.includes(":")) {
