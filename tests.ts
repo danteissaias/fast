@@ -1,10 +1,10 @@
-import { assertEquals } from "https://deno.land/std@0.145.0/testing/asserts.ts";
+import { assertEquals } from "https://deno.land/std@0.146.0/testing/asserts.ts";
 import { Application } from "./mod.ts";
 
 const app = new Application();
 
-app.use(async (ctx, next) => {
-  const res = await next(ctx);
+app.use(async (_, next) => {
+  const res = await next();
   res.headers.set("x-hello", "world");
   return res;
 });
