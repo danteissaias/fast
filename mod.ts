@@ -4,7 +4,7 @@ export type Middleware = (
 ) => Promise<unknown> | unknown;
 
 export type NextFunction = (
-  ctx: Context,
+  ctx?: Context,
 ) => Promise<Response>;
 
 export interface Context {
@@ -63,8 +63,9 @@ const decode = (res: unknown) => {
 const compose = (middlewares: Middleware[]) => {
   let cur = -1;
   let next: NextFunction;
-  return next = async (ctx) => {
-    const res = await middlewares[++cur](ctx, next);
+  let ctx: Context;
+  return next = async (ctx2 = ctx) => {
+    const res = await middlewares[++cur](ctx2, next);
     return decode(res);
   };
 };
