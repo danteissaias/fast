@@ -20,22 +20,26 @@ type CtxAssertFn = (
   init?: ResponseInit,
 ) => asserts expr;
 
+export class ServerError extends Error {
+  expose: boolean;
+  init: ResponseInit;
+
+  constructor(status: number, message?: string, init: ResponseInit = {}) {
+    super(message ?? "Internal Server Error");
+    this.init = { status, ...init };
+    this.expose = status < 500;
+  }
+}
+
+const assert: CtxAssertFn = (expr, status, message, init) => {
+  if (expr) return;
+  throw new ServerError(status, message, init);
+};
+
 interface ContextInit {
   request: Request;
   params?: Record<string, string>;
 }
-
-interface ServerError {
-  message: string;
-  expose?: boolean;
-  init?: ResponseInit;
-}
-
-const assert: CtxAssertFn = (expr, status, message, init = { status }) => {
-  if (expr) return;
-  init.status = status;
-  throw { expose: status < 500, message, init };
-};
 
 const createContext = ({ request, params = {} }: ContextInit): Context => ({
   request,
@@ -70,7 +74,8 @@ const compose = (middlewares: Middleware[]) => {
   };
 };
 
-const convert = (error: ServerError) => {
+// deno-lint-ignore no-explicit-any
+const convert = (error: any) => {
   let { message, expose = false, init = { status: 500 } } = error;
   if (!expose) message = "Internal Server Error";
   return Response.json({ message }, init);
