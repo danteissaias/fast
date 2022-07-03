@@ -155,3 +155,7 @@ export class Application {
     return compose(middlewares)(ctx).catch(convert);
   };
 }
+
+export default function fast() {
+  return new Application();
+}
