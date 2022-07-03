@@ -8,7 +8,7 @@ Small (<200L) web framework.
 ```ts
 import fast from "https://deno.land/x/fast/mod.ts";
 
-const app = new Application();
+const app = fast();
 
 app.get("/", () => "Hello, World!");
 
