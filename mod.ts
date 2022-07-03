@@ -1,3 +1,8 @@
+import {
+  serve,
+  type ServeInit,
+} from "https://deno.land/std@0.146.0/http/server.ts";
+
 export type Middleware = (
   ctx: Context,
   next: NextFunction,
@@ -154,8 +159,8 @@ export class Application {
       : this.#middlewares;
     return compose(middlewares)(ctx).catch(convert);
   };
+
+  serve = (opts?: ServeInit) => serve(this.handle, opts);
 }
 
-export default function fast() {
-  return new Application();
-}
+export default () => new Application();
