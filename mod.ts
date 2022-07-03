@@ -1,13 +1,24 @@
+export type Middleware = (
+  ctx: Context,
+  next: NextFunction,
+) => Promise<unknown> | unknown;
+
+export type NextFunction = (
+  ctx: Context,
+) => Promise<Response>;
+
 export interface Context {
   request: Request;
   params: Record<string, string>;
-  assert(
-    expr: unknown,
-    status: number,
-    message: string,
-    init?: ResponseInit,
-  ): asserts expr;
+  assert: CtxAssertFn;
 }
+
+type CtxAssertFn = (
+  expr: unknown,
+  status: number,
+  message: string,
+  init?: ResponseInit,
+) => asserts expr;
 
 interface ContextInit {
   request: Request;
@@ -20,29 +31,32 @@ interface ServerError {
   init?: ResponseInit;
 }
 
+const assert: CtxAssertFn = (expr, status, message, init = { status }) => {
+  if (expr) return;
+  init.status = status;
+  throw { expose: status < 500, message, init };
+};
+
 const createContext = ({ request, params = {} }: ContextInit): Context => ({
   request,
   params,
-  assert(expr, status, message, init = { status }) {
-    if (expr) return;
-    init.status = status;
-    throw { expose: status < 500, message, init };
-  },
+  assert,
 });
 
-export type NextFunction = (
-  ctx: Context,
-) => Promise<Response>;
-
-export type Middleware = (
-  ctx: Context,
-  next: NextFunction,
-) => Promise<unknown> | unknown;
+const isJSON = (val: unknown) => {
+  try {
+    const s = JSON.stringify(val);
+    JSON.parse(s);
+    return true;
+  } catch {
+    return false;
+  }
+};
 
 const decode = (res: unknown) => {
   if (res instanceof Response) return res;
   if (typeof res === "string") return new Response(res);
-  if (typeof res === "object") return Response.json(res);
+  if (isJSON(res)) return Response.json(res);
   throw new Error("Invalid response");
 };
 
@@ -79,16 +93,15 @@ export interface Application {
 }
 
 export class Application {
-  #middlewares: Middleware[];
   #patterns: Set<URLPattern>;
+  #middlewares: Middleware[];
   #routes: Record<string, Middleware[]>;
   #cache: Record<string, Match | null>;
 
   constructor() {
-    this.#middlewares = [];
     this.#patterns = new Set();
-    this.#routes = {};
-    this.#cache = {};
+    this.#middlewares = [];
+    this.#routes = this.#cache = {};
 
     // Define methods
     // deno-fmt-ignore-line
