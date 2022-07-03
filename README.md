@@ -6,12 +6,11 @@ Small (<200L) web framework.
 [![deno doc](https://doc.deno.land/badge.svg)](https://doc.deno.land/https://deno.land/x/fast/mod.ts)
 
 ```ts
-import { serve } from "https://deno.land/std/http/server.ts";
-import { Application } from "https://deno.land/x/fast/mod.ts";
+import fast from "https://deno.land/x/fast/mod.ts";
 
 const app = new Application();
 
 app.get("/", () => "Hello, World!");
 
-await serve(app.handle);
+await fast.serve()
 ```
