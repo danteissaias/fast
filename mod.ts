@@ -65,13 +65,14 @@ const decode = (res: unknown) => {
 };
 
 const compose = (middlewares: Middleware[]) => {
-  let cur = -1;
-  let next: NextFunction;
   let ctx: Context;
-  return next = async (ctx2 = ctx) => {
-    const res = await middlewares[++cur](ctx2, next);
-    return decode(res);
-  };
+  let cur = -1;
+  const max = middlewares.length;
+  let next: NextFunction;
+  return next = async (ctx2 = ctx) =>
+    ++cur >= max
+      ? new Response("Not Found", { status: 404 })
+      : decode(await middlewares[cur](ctx2, next));
 };
 
 // deno-lint-ignore no-explicit-any
@@ -80,8 +81,6 @@ const convert = (error: any) => {
   if (!expose) message = "Internal Server Error";
   return Response.json({ message }, init);
 };
-
-const fallback = () => new Response("Not Found", { status: 404 });
 
 interface Match {
   middlewares: Middleware[];
@@ -143,19 +142,16 @@ export class Application {
   }
 
   use(...middlewares: Middleware[]) {
-    this.#middlewares.splice(0, 0, ...middlewares);
-    return this;
+    const at = this.#middlewares.length - 1;
+    this.#middlewares.splice(at, 0, ...middlewares);
   }
 
   handle = (request: Request) => {
-    const ctx = createContext({ request });
-    const { url, method } = request;
-    const match = this.#match(url, method);
-    ctx.params = match?.params ?? {};
-    let middlewares = match
+    const match = this.#match(request.url, request.method);
+    const ctx = createContext({ request, params: match?.params });
+    const middlewares = match
       ? this.#middlewares.concat(match.middlewares)
       : this.#middlewares;
-    middlewares = middlewares.concat(fallback);
     return compose(middlewares)(ctx).catch(convert);
   };
 }
