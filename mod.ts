@@ -74,10 +74,10 @@ const compose = (middlewares: Middleware[]) => {
   let cur = -1;
   const max = middlewares.length;
   let next: NextFunction;
-  return next = async (ctx2 = ctx) =>
+  return next = async (c = ctx) =>
     ++cur >= max
       ? new Response("Not Found", { status: 404 })
-      : decode(await middlewares[cur](ctx2, next));
+      : decode(await middlewares[cur](ctx = c, next));
 };
 
 // deno-lint-ignore no-explicit-any

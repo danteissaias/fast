@@ -11,6 +11,7 @@ app.use(async (_, next) => {
 
 app.get("/", () => "Hello, World!");
 app.get("/json", () => ({ hello: "world" }));
+app.get("/error", (ctx) => ctx.assert(false, 400, "Bad Request"));
 
 Deno.test("app.handle", async () => {
   const req = new Request("http://localhost:8000");
@@ -35,4 +36,11 @@ Deno.test("app.use", async () => {
   assertEquals(res.status, 200);
   assertEquals(await res.text(), "Hello, World!");
   assertEquals(res.headers.get("x-hello"), "world");
+});
+
+Deno.test("ctx.assert", async () => {
+  const req = new Request("http://localhost:8000/error");
+  const res = await app.handle(req);
+  assertEquals(res.status, 400);
+  assertEquals(await res.json(), { message: "Bad Request" });
 });
