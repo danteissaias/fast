@@ -5,12 +5,12 @@ const app = new Application();
 
 app.use(async (_, next) => {
   const res = await next();
-  res.headers.set("x-hello", "world");
+  res.headers.set("x-text", "Hello, World!");
   return res;
 });
 
 app.get("/", () => "Hello, World!");
-app.get("/json", () => ({ hello: "world" }));
+app.get("/json", () => ({ text: "Hello, World!" }));
 app.get("/error", (ctx) => ctx.assert(false, 400, "Bad Request"));
 
 Deno.test("app.handle", async () => {
@@ -27,7 +27,7 @@ Deno.test("app.handle", async () => {
   const req3 = new Request("http://localhost:8000/json");
   const res3 = await app.handle(req3);
   assertEquals(res3.status, 200);
-  assertEquals(await res3.json(), { hello: "world" });
+  assertEquals(await res3.json(), { text: "Hello, World!" });
 });
 
 Deno.test("app.use", async () => {
@@ -35,7 +35,7 @@ Deno.test("app.use", async () => {
   const res = await app.handle(req);
   assertEquals(res.status, 200);
   assertEquals(await res.text(), "Hello, World!");
-  assertEquals(res.headers.get("x-hello"), "world");
+  assertEquals(res.headers.get("x-text"), "Hello, World!");
 });
 
 Deno.test("ctx.assert", async () => {
