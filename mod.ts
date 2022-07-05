@@ -15,15 +15,30 @@ export type NextFunction = (
 export interface Context {
   request: Request;
   params: Record<string, string>;
-  assert: CtxAssertFn;
+  assert: (
+    expr: unknown,
+    status?: number,
+    message?: string,
+    init?: ResponseInit,
+  ) => asserts expr;
 }
 
-type CtxAssertFn = (
-  expr: unknown,
-  status: number,
-  message: string,
-  init?: ResponseInit,
-) => asserts expr;
+export interface ContextInit {
+  request: Request;
+  params?: Record<string, string>;
+}
+
+export const createContext = ({
+  request,
+  params = {},
+}: ContextInit): Context => ({
+  request,
+  params,
+  assert(expr, status = 500, message = "Assertion failed.", init) {
+    if (expr) return;
+    throw new ServerError(status, message, init);
+  },
+});
 
 export class ServerError extends Error {
   expose: boolean;
@@ -35,22 +50,6 @@ export class ServerError extends Error {
     this.expose = status < 500;
   }
 }
-
-const assert: CtxAssertFn = (expr, status, message, init) => {
-  if (expr) return;
-  throw new ServerError(status, message, init);
-};
-
-interface ContextInit {
-  request: Request;
-  params?: Record<string, string>;
-}
-
-const createContext = ({ request, params = {} }: ContextInit): Context => ({
-  request,
-  params,
-  assert,
-});
 
 const isJSON = (val: unknown) => {
   try {
@@ -100,6 +99,9 @@ export interface Application {
   delete(path: string, ...middlewares: Middleware[]): Application;
   options(path: string, ...middlewares: Middleware[]): Application;
   head(path: string, ...middlewares: Middleware[]): Application;
+  use(...middlewares: Middleware[]): Application;
+  handle(request: Request): Promise<Response>;
+  serve(init?: ServeInit): Promise<void>;
 }
 
 export class Application {
@@ -149,6 +151,7 @@ export class Application {
   use(...middlewares: Middleware[]) {
     const at = this.#middlewares.length - 1;
     this.#middlewares.splice(at, 0, ...middlewares);
+    return this;
   }
 
   handle = (request: Request) => {

@@ -2,7 +2,7 @@ import { Application } from "./mod.ts";
 
 const app = new Application();
 
-app.get("/", () => "Hello, World!");
+app.get("/", () => new Response("Hello, World!"));
 
 const req = new Request("https://localhost:8000");
 
