@@ -1,7 +1,7 @@
 import { assertEquals } from "https://deno.land/std@0.146.0/testing/asserts.ts";
-import { Application } from "./mod.ts";
+import fast from "./mod.ts";
 
-const app = new Application();
+const app = fast();
 
 app.use(async (_, next) => {
   const res = await next();
@@ -10,8 +10,10 @@ app.use(async (_, next) => {
 });
 
 app.get("/", () => "Hello, World!");
-app.get("/json", () => ({ text: "Hello, World!" }));
+app.get("/_/:name", (ctx) => `Hello, ${ctx.params.name}!`);
 app.get("/error", (ctx) => ctx.assert(false, 400, "Bad Request"));
+app.get("/invalid", () => undefined);
+app.get("/json", () => ({ text: "Hello, World!" }));
 
 Deno.test("app.handle", async () => {
   const req = new Request("http://localhost:8000");
@@ -24,10 +26,22 @@ Deno.test("app.handle", async () => {
   assertEquals(res2.status, 404);
   assertEquals(await res2.text(), "Not Found");
 
-  const req3 = new Request("http://localhost:8000/json");
+  const req3 = new Request("http://localhost:8000/_/Bob");
   const res3 = await app.handle(req3);
   assertEquals(res3.status, 200);
-  assertEquals(await res3.json(), { text: "Hello, World!" });
+  assertEquals(await res3.text(), "Hello, Bob!");
+});
+
+Deno.test("decode", async () => {
+  const req = new Request("http://localhost:8000/json");
+  const res = await app.handle(req);
+  assertEquals(res.status, 200);
+  assertEquals(await res.json(), { text: "Hello, World!" });
+
+  const req2 = new Request("http://localhost:8000/invalid");
+  const res2 = await app.handle(req2);
+  assertEquals(res2.status, 500);
+  assertEquals(await res2.json(), { message: "Internal Server Error" });
 });
 
 Deno.test("app.use", async () => {
