@@ -127,11 +127,15 @@ export class Application {
   #add(path: string, method: string, middlewares: Middleware[]) {
     const id = method + path;
     const route = this.#routes[id];
-    if (route) route.push(...middlewares);
-    const pattern = new URLPattern({ pathname: path });
-    this.#patterns.add(pattern);
-    this.#routes[id] = middlewares;
-    return this;
+    if (route) {
+      route.push(...middlewares);
+      return this;
+    } else {
+      const pattern = new URLPattern({ pathname: path });
+      this.#patterns.add(pattern);
+      this.#routes[id] = middlewares;
+      return this;
+    }
   }
 
   #match(url: string, method: string) {
