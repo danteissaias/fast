@@ -12,6 +12,7 @@ export class ServerError extends Error {
 export interface Context {
   request: Request;
   params: Record<string, string>;
+  url: URL;
   assert: (
     expr: unknown,
     status?: number,
@@ -28,11 +29,16 @@ export interface ContextInit {
 export const createContext = ({
   request,
   params = {},
-}: ContextInit): Context => ({
-  request,
-  params,
-  assert(expr, status = 500, message = "Assertion failed.", init) {
-    if (expr) return;
-    throw new ServerError(status, message, init);
-  },
-});
+}: ContextInit): Context => {
+  let url: URL;
+  return {
+    request,
+    params,
+    // deno-fmt-ignore
+    get url() { return url ?? (url = new URL(request.url)) },
+    assert(expr, status = 500, message = "Assertion failed.", init) {
+      if (expr) return;
+      throw new ServerError(status, message, init);
+    },
+  };
+};
