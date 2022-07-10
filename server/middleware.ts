@@ -27,15 +27,14 @@ export function compose(middlewares: Middleware[]) {
   const max = middlewares.length;
   let next: NextFunction;
   return next = async (ctx: Context) => {
-    // fallback next() called on last handler
+    // fallback when next() called on last handler
     if (++cur >= max) return new Response("Not Found", { status: 404 });
     const res = await middlewares[cur](ctx, next);
-    if (res instanceof Response) return res;
-    return decode(res);
+    return res instanceof Response ? res : decode(res);
   };
 }
 
-function isJSON(val: unknown): val is Record<string, unknown> {
+export function isJSON(val: unknown): val is Record<string, unknown> {
   try {
     const s = JSON.stringify(val);
     JSON.parse(s);
@@ -45,7 +44,7 @@ function isJSON(val: unknown): val is Record<string, unknown> {
   }
 }
 
-function decode(res: unknown) {
+export function decode(res: unknown) {
   // deno-fmt-ignore
   if (typeof res === "string" || res instanceof ArrayBuffer ||
     res instanceof Uint8Array || res instanceof ReadableStream)

@@ -2,11 +2,11 @@ import {
   serve,
   type ServeInit,
 } from "https://deno.land/std@0.147.0/http/server.ts";
-import { createContext } from "./context.ts";
+import { Context } from "./context.ts";
 import { compose, type Middleware } from "./middleware.ts";
 
 // deno-lint-ignore no-explicit-any
-const convert = (error: any) => {
+export const onError = (error: any) => {
   let { message, expose = false, init = { status: 500 } } = error;
   if (!expose) message = "Internal Server Error";
   return Response.json({ message }, init);
@@ -79,19 +79,17 @@ export class Application {
   }
 
   use(...middlewares: Middleware[]) {
-    const at = this.#middlewares.length - 1;
-    this.#middlewares.splice(at, 0, ...middlewares);
+    this.#middlewares = this.#middlewares.concat(middlewares);
     return this;
   }
 
   handle = (request: Request) => {
     const match = this.#match(request.url, request.method);
-    const ctx = createContext({ request, params: match?.params });
-    const middlewares = match
-      ? this.#middlewares.concat(match.middlewares)
-      : this.#middlewares;
-    return compose(middlewares)(ctx).catch(convert);
+    const ctx = new Context({ request, params: match?.params });
+    if (!match) return compose(this.#middlewares)(ctx);
+    const middlewares = this.#middlewares.concat(match.middlewares);
+    return compose(middlewares)(ctx);
   };
 
-  serve = (opts?: ServeInit) => serve(this.handle, opts);
+  serve = (opts?: ServeInit) => serve(this.handle, { onError, ...opts });
 }

@@ -1,7 +1,11 @@
 import { assertEquals } from "https://deno.land/std@0.146.0/testing/asserts.ts";
 import fast from "./mod.ts";
+import { onError } from "./server/application.ts";
 
 const app = fast();
+
+// Add error handler since we aren't using .serve()
+app.use(async (ctx, next) => await next(ctx).catch(onError));
 
 app.use(async (ctx, next) => {
   const res = await next(ctx);
