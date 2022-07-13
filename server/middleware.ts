@@ -1,22 +1,9 @@
 import type { Context } from "./context.ts";
 
-export type ResponseLike =
-  | Response
-  | ReadableStream
-  | ArrayBuffer
-  | Uint8Array
-  | string
-  | Blob
-  | File
-  | Record<string, unknown>
-  | Array<unknown>
-  | null
-  | void;
-
 export type Middleware = (
   ctx: Context,
   next: NextFunction,
-) => Promise<ResponseLike> | ResponseLike;
+) => Promise<unknown> | unknown;
 
 export type NextFunction = (
   ctx: Context,
