@@ -9,14 +9,18 @@ export type NextFunction = (
   ctx: Context,
 ) => Promise<Response>;
 
-export function compose(middlewares: Middleware[]) {
+export function compose(
+  middlewares: Middleware[],
+  fallback: Middleware = () => new Response("Not Found", { status: 404 }),
+) {
   let cur = -1;
   const max = middlewares.length;
   let next: NextFunction;
   return next = async (ctx: Context) => {
     // fallback when next() called on last handler
-    if (++cur >= max) return new Response("Not Found", { status: 404 });
-    const res = await middlewares[cur](ctx, next);
+    const res = ++cur >= max
+      ? fallback(ctx, next)
+      : await middlewares[cur](ctx, next);
     return res instanceof Response ? res : decode(res);
   };
 }
