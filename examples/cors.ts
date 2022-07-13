@@ -1,4 +1,5 @@
 import type { Middleware } from "../mod.ts";
+import { onError } from "../server/application.ts";
 
 export const cors: Middleware = async (ctx, next) => {
   if (ctx.request.method === "OPTIONS") {
@@ -9,7 +10,7 @@ export const cors: Middleware = async (ctx, next) => {
     headers.set("Access-Control-Allow-Headers", "*");
     return new Response(null, { status: 204, headers });
   } else {
-    const res = await next(ctx);
+    const res = await next(ctx).catch((e) => onError(e));
     res.headers.set("Access-Control-Allow-Origin", "*");
     res.headers.set("Access-Control-Allow-Methods", "*");
     res.headers.set("Access-Control-Allow-Headers", "*");
