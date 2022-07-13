@@ -48,6 +48,11 @@ export class Context {
   // deno-fmt-ignore
   get url() { return this.#url ?? (this.#url = new URL(this.request.url)) }
 
+  redirect(pathname: string, status?: number) {
+    const { href } = new URL(pathname, this.request.url);
+    return Response.redirect(href, status);
+  }
+
   constructor({ request, params }: ContextInit) {
     this.request = request;
     this.params = params ?? {};
