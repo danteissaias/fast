@@ -17,6 +17,7 @@ app.get("/", () => "Hello, World!");
 app.get("/_/:name", (ctx) => `Hello, ${ctx.params.name}!`);
 app.get("/error", (ctx) => ctx.assert(false, 400, "Bad Request"));
 app.get("/json", () => ({ text: "Hello, World!" }));
+app.get("/redirect", (ctx) => ctx.redirect("/login"));
 
 Deno.test("app.handle", async () => {
   const req = new Request("http://localhost:8000");
@@ -55,4 +56,12 @@ Deno.test("ctx.assert", async () => {
   const res = await app.handle(req);
   assertEquals(res.status, 400);
   assertEquals(await res.json(), { message: "Bad Request" });
+});
+
+Deno.test("ctx.redirect", async () => {
+  const req = new Request("http://localhost:8000/redirect");
+  const res = await app.handle(req);
+  console.log(await res.text());
+  assertEquals(res.status, 302);
+  assertEquals(res.headers.get("location"), "http://localhost:8000/login");
 });
