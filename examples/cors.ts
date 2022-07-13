@@ -9,7 +9,7 @@ export const cors: Middleware = async (ctx, next) => {
     headers.set("Access-Control-Allow-Headers", "*");
     return new Response(null, { status: 204, headers });
   } else {
-    const res = await next();
+    const res = await next(ctx);
     res.headers.set("Access-Control-Allow-Origin", "*");
     res.headers.set("Access-Control-Allow-Methods", "*");
     res.headers.set("Access-Control-Allow-Headers", "*");
