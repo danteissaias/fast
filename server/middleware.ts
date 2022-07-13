@@ -19,7 +19,7 @@ export function compose(
   return next = async (ctx: Context) => {
     // fallback when next() called on last handler
     const res = ++cur >= max
-      ? fallback(ctx, next)
+      ? await fallback(ctx, next)
       : await middlewares[cur](ctx, next);
     return res instanceof Response ? res : decode(res);
   };
