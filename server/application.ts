@@ -6,13 +6,11 @@ import { Context } from "./context.ts";
 import { compose, type Middleware } from "./middleware.ts";
 
 // deno-lint-ignore no-explicit-any
-export const onError = (error: any) => {
+const convert = (error: any) => {
   let { message, expose = false, init = { status: 500 } } = error;
   if (!expose) message = "Internal Server Error";
   return Response.json({ message }, init);
 };
-
-export const fb = () => new Response("Not Found", { status: 404 });
 
 interface Match {
   middlewares: Middleware[];
@@ -32,16 +30,25 @@ export interface Application {
   serve(init?: ServeInit): Promise<void>;
 }
 
+interface Route {
+  pattern: URLPattern;
+  middlewares: Record<string, Middleware[]>;
+}
+
 export class Application {
-  #patterns: Set<URLPattern>;
   #middlewares: Middleware[];
-  #routes: Record<string, Middleware[]>;
+  #routes: Record<string, Route>;
   #cache: Record<string, Match | null>;
+  // TODO: Replace with URLPatternList
+  get #patterns() {
+    return Object.values(this.#routes)
+      .map((r) => r.pattern);
+  }
 
   constructor() {
-    this.#patterns = new Set();
     this.#middlewares = [];
-    this.#routes = this.#cache = {};
+    this.#routes = {};
+    this.#cache = {};
 
     // Define methods
     // deno-fmt-ignore-line
@@ -52,28 +59,24 @@ export class Application {
     }
   }
 
-  #add(path: string, method: string, middlewares: Middleware[]) {
-    const id = method + path;
-    const route = this.#routes[id];
-    if (route) {
-      route.push(...middlewares);
-      return this;
-    } else {
-      const pattern = new URLPattern({ pathname: path });
-      this.#patterns.add(pattern);
-      this.#routes[id] = middlewares;
-      return this;
-    }
+  #add(pathname: string, method: string, middlewares: Middleware[]) {
+    const route = this.#routes[pathname] ?? {};
+    route.pattern = new URLPattern({ pathname });
+    route.middlewares = { [method]: middlewares };
+    this.#routes[pathname] = route;
+    return this;
   }
 
   #match(url: string, method: string) {
     const id = method + url;
     const hit = this.#cache[id];
     if (hit) return hit;
-    const pattern = [...this.#patterns].find((p) => p.test(url));
-    const middlewares = this.#routes[method + pattern?.pathname];
+    const pattern = this.#patterns.find((p) => p.test(url));
+    if (!pattern) return this.#cache[id] = null;
+    const route = this.#routes[pattern.pathname];
+    const middlewares = route.middlewares[method];
     if (!middlewares) return this.#cache[id] = null;
-    if (pattern?.pathname.includes(":")) {
+    if (pattern.pathname.includes(":")) {
       const exec = pattern.exec(url);
       const params = exec?.pathname.groups;
       return this.#cache[id] = { middlewares, params };
@@ -88,10 +91,10 @@ export class Application {
   handle = (request: Request) => {
     const match = this.#match(request.url, request.method);
     const ctx = new Context({ request, params: match?.params });
-    if (!match) return compose(this.#middlewares, fb)(ctx);
+    if (!match) return compose(this.#middlewares)(ctx);
     const middlewares = this.#middlewares.concat(match.middlewares);
-    return compose(middlewares, fb)(ctx);
+    return compose(middlewares)(ctx).catch(convert);
   };
 
-  serve = (opts?: ServeInit) => serve(this.handle, { onError, ...opts });
+  serve = (opts?: ServeInit) => serve(this.handle, opts);
 }

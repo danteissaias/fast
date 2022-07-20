@@ -7,21 +7,22 @@ export type Middleware = (
   next: NextFunction,
 ) => Promise<unknown> | unknown;
 
-export type NextFunction = (ctx: Context) => Promise<Response>;
-export type FallbackFunction = (ctx: Context) => Response;
+export type NextFunction = (
+  ctx: Context,
+) => Promise<Response>;
 
-export function compose(middlewares: Middleware[], fb: FallbackFunction) {
+export function compose(middlewares: Middleware[]) {
   let cur = -1;
   const max = middlewares.length;
   let next: NextFunction;
   return next = (ctx: Context) => {
-    // fallback when next() called on last handler
-    const res = ++cur >= max ? fb(ctx) : middlewares[cur](ctx, next);
+    ctx.assert(++cur < max, 404, "Not Found");
+    const res = middlewares[cur](ctx, next);
     return Promise.resolve(res).then(decode);
   };
 }
 
-export function isJSON(val: unknown): val is Record<string, unknown> {
+function isJSON(val: unknown) {
   try {
     const s = JSON.stringify(val);
     JSON.parse(s);
@@ -31,7 +32,7 @@ export function isJSON(val: unknown): val is Record<string, unknown> {
   }
 }
 
-export function decode(res: unknown) {
+function decode(res: unknown) {
   if (res instanceof Response) return res;
 
   // deno-fmt-ignore

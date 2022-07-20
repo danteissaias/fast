@@ -1,4 +1,4 @@
-export class ServerError extends Error {
+class ServerError extends Error {
   expose: boolean;
   init: ResponseInit;
 
@@ -9,14 +9,14 @@ export class ServerError extends Error {
   }
 }
 
-export type CtxAssertFn = (
+type CtxAssertFn = (
   expr: unknown,
   status?: number,
   message?: string,
   init?: ResponseInit,
 ) => asserts expr;
 
-export const assert: CtxAssertFn = (
+const assert: CtxAssertFn = (
   expr,
   status = 500,
   message = "Assertion failed",
@@ -26,7 +26,7 @@ export const assert: CtxAssertFn = (
   throw new ServerError(status, message, init);
 };
 
-export class State {
+class State {
   // deno-lint-ignore no-explicit-any
   #state: Record<string, any> = {};
   get = <T>(key: string): T | null => this.#state[key] ?? null;
@@ -45,18 +45,25 @@ export class Context {
   state = new State();
   assert: CtxAssertFn;
 
+  constructor({ request, params }: ContextInit) {
+    this.request = request;
+    this.params = params ?? {};
+    this.assert = assert;
+  }
+
   // deno-fmt-ignore
   get url() { return this.#url ?? (this.#url = new URL(this.request.url)) }
+
+  throw(
+    status: number,
+    message = "Internal Server Error",
+    init: ResponseInit = {},
+    // deno-fmt-ignore
+  ) { throw new ServerError(status, message, init); }
 
   redirect(pathname: string, status = 302) {
     const { href } = new URL(pathname, this.request.url);
     const headers = { location: href };
     return new Response(null, { status, headers });
-  }
-
-  constructor({ request, params }: ContextInit) {
-    this.request = request;
-    this.params = params ?? {};
-    this.assert = assert;
   }
 }
