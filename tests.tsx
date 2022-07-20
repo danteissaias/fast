@@ -1,3 +1,4 @@
+/** @jsxImportSource https://esm.sh/preact@10.9.0 */
 import { assertEquals } from "https://deno.land/std@0.146.0/testing/asserts.ts";
 import fast from "./mod.ts";
 import { onError } from "./server/application.ts";
@@ -18,6 +19,7 @@ app.get("/_/:name", (ctx) => `Hello, ${ctx.params.name}!`);
 app.get("/error", (ctx) => ctx.assert(false, 400, "Bad Request"));
 app.get("/json", () => ({ text: "Hello, World!" }));
 app.get("/redirect", (ctx) => ctx.redirect("/login"));
+app.get("/preact", () => <div>Hello, World!</div>);
 
 Deno.test("app.handle", async () => {
   const req = new Request("http://localhost:8000");
@@ -41,6 +43,11 @@ Deno.test("decode", async () => {
   const res = await app.handle(req);
   assertEquals(res.status, 200);
   assertEquals(await res.json(), { text: "Hello, World!" });
+
+  const req2 = new Request("http://localhost:8000/preact");
+  const res2 = await app.handle(req2);
+  assertEquals(res2.status, 200);
+  assertEquals(await res2.text(), "<div>Hello, World!</div>");
 });
 
 Deno.test("app.use", async () => {

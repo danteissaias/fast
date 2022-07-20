@@ -1,3 +1,5 @@
+import renderToString from "https://esm.sh/preact-render-to-string@5.2.1";
+import { isValidElement } from "https://esm.sh/preact@10.9.0";
 import type { Context } from "./context.ts";
 
 export type Middleware = (
@@ -36,6 +38,13 @@ export function decode(res: unknown) {
   if (typeof res === "string" || res instanceof ArrayBuffer ||
     res instanceof Uint8Array || res instanceof ReadableStream)
     return new Response(res);
+
+  if (isValidElement(res)) {
+    const content = renderToString(res);
+    const headers = new Headers();
+    headers.set("Content-Type", "text/html");
+    return new Response(content, { headers });
+  }
 
   if (isJSON(res) || Array.isArray(res)) return Response.json(res);
   if (res === null || res === undefined) {
