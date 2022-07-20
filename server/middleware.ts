@@ -5,23 +5,17 @@ export type Middleware = (
   next: NextFunction,
 ) => Promise<unknown> | unknown;
 
-export type NextFunction = (
-  ctx: Context,
-) => Promise<Response>;
+export type NextFunction = (ctx: Context) => Promise<Response>;
+export type FallbackFunction = (ctx: Context) => Response;
 
-export function compose(
-  middlewares: Middleware[],
-  fallback: Middleware = () => new Response("Not Found", { status: 404 }),
-) {
+export function compose(middlewares: Middleware[], fb: FallbackFunction) {
   let cur = -1;
   const max = middlewares.length;
   let next: NextFunction;
-  return next = async (ctx: Context) => {
+  return next = (ctx: Context) => {
     // fallback when next() called on last handler
-    const res = ++cur >= max
-      ? await fallback(ctx, next)
-      : await middlewares[cur](ctx, next);
-    return res instanceof Response ? res : decode(res);
+    const res = ++cur >= max ? fb(ctx) : middlewares[cur](ctx, next);
+    return Promise.resolve(res).then(decode);
   };
 }
 
@@ -36,6 +30,8 @@ export function isJSON(val: unknown): val is Record<string, unknown> {
 }
 
 export function decode(res: unknown) {
+  if (res instanceof Response) return res;
+
   // deno-fmt-ignore
   if (typeof res === "string" || res instanceof ArrayBuffer ||
     res instanceof Uint8Array || res instanceof ReadableStream)
