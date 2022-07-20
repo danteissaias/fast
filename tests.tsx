@@ -68,7 +68,6 @@ Deno.test("ctx.assert", async () => {
 Deno.test("ctx.redirect", async () => {
   const req = new Request("http://localhost:8000/redirect");
   const res = await app.handle(req);
-  console.log(await res.text());
   assertEquals(res.status, 302);
   assertEquals(res.headers.get("location"), "http://localhost:8000/login");
 });

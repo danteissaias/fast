@@ -14,4 +14,4 @@ jobs:
       - uses: denoland/setup-deno@v1
         with:
           deno-version: v1.x
-      - run: deno test tests.tsx
+      - run: deno test --no-check tests.tsx
