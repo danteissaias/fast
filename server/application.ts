@@ -91,7 +91,7 @@ export class Application {
   handle = (request: Request) => {
     const match = this.#match(request.url, request.method);
     const ctx = new Context({ request, params: match?.params });
-    if (!match) return compose(this.#middlewares)(ctx);
+    if (!match) return compose(this.#middlewares)(ctx).catch(convert);
     const middlewares = this.#middlewares.concat(match.middlewares);
     return compose(middlewares)(ctx).catch(convert);
   };
