@@ -50,7 +50,7 @@ export class Context {
     status = 500,
     message = "Assertion failed.",
     init: ResponseInit = {},
-  ) {
+  ): asserts expr {
     if (expr) return;
     throw new ServerError(status, message, init);
   }
