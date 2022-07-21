@@ -9,23 +9,6 @@ class ServerError extends Error {
   }
 }
 
-type CtxAssertFn = (
-  expr: unknown,
-  status?: number,
-  message?: string,
-  init?: ResponseInit,
-) => asserts expr;
-
-const assert: CtxAssertFn = (
-  expr,
-  status = 500,
-  message = "Assertion failed",
-  init,
-) => {
-  if (expr) return;
-  throw new ServerError(status, message, init);
-};
-
 class State {
   // deno-lint-ignore no-explicit-any
   #state: Record<string, any> = {};
@@ -41,18 +24,19 @@ export interface ContextInit {
 export class Context {
   request: Request;
   params: Record<string, string>;
-  #url?: URL;
-  state = new State();
-  assert: CtxAssertFn;
+  state: State;
+  #url: URL | undefined;
 
   constructor({ request, params }: ContextInit) {
     this.request = request;
     this.params = params ?? {};
-    this.assert = assert;
+    this.state = new State();
   }
 
-  // deno-fmt-ignore
-  get url() { return this.#url ?? (this.#url = new URL(this.request.url)) }
+  get url() {
+    if (!this.#url) this.#url = new URL(this.request.url);
+    return this.#url;
+  }
 
   throw(
     status: number,
@@ -61,9 +45,18 @@ export class Context {
     // deno-fmt-ignore
   ) { throw new ServerError(status, message, init); }
 
+  assert(
+    expr: unknown,
+    status = 500,
+    message = "Assertion failed.",
+    init: ResponseInit = {},
+  ) {
+    if (expr) return;
+    throw new ServerError(status, message, init);
+  }
+
   redirect(pathname: string, status = 302) {
-    const { href } = new URL(pathname, this.request.url);
-    const headers = { location: href };
-    return new Response(null, { status, headers });
+    const to = new URL(pathname, this.request.url);
+    return Response.redirect(to, status);
   }
 }

@@ -17,6 +17,11 @@ interface Match {
   params?: Record<string, string>;
 }
 
+interface Route {
+  pattern: URLPattern;
+  middlewares: Record<string, Middleware[]>;
+}
+
 export interface Application {
   get(path: string, ...middlewares: Middleware[]): Application;
   post(path: string, ...middlewares: Middleware[]): Application;
@@ -28,11 +33,6 @@ export interface Application {
   use(...middlewares: Middleware[]): Application;
   handle(request: Request): Promise<Response>;
   serve(init?: ServeInit): Promise<void>;
-}
-
-interface Route {
-  pattern: URLPattern;
-  middlewares: Record<string, Middleware[]>;
 }
 
 export class Application {
