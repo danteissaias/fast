@@ -2,7 +2,7 @@ import {
   assertEquals,
   assertThrows,
 } from "https://deno.land/std@0.149.0/testing/asserts.ts";
-import { Context } from "./context.ts";
+import { Context } from "../mod.ts";
 
 const request = new Request("http://localhost:8000");
 const params = {};

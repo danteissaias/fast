@@ -1,5 +1,5 @@
 import { assertEquals } from "https://deno.land/std@0.149.0/testing/asserts.ts";
-import { Application } from "./application.ts";
+import { Application } from "../mod.ts";
 
 const app = new Application();
 app.get("/", () => "Hello, World!");

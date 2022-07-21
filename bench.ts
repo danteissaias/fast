@@ -1,6 +1,6 @@
-import { Application } from "./application.ts";
+import fast from "./mod.ts";
 
-const app = new Application();
+const app = fast();
 
 app.get("/", () => new Response("Hello, World!"));
 

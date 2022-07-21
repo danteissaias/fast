@@ -1,6 +1,5 @@
 import { assertEquals } from "https://deno.land/std@0.149.0/testing/asserts.ts";
-import { Context } from "./context.ts";
-import { compose, decode } from "./middleware.ts";
+import { compose, Context, decode } from "../mod.ts";
 
 const request = new Request("http://localhost:8000");
 const params = {};
