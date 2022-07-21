@@ -30,7 +30,7 @@ function isJSON(val: unknown) {
   }
 }
 
-function decode(res: unknown) {
+export function decode(res: unknown) {
   if (res instanceof Response) return res;
 
   // deno-fmt-ignore

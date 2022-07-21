@@ -39,7 +39,7 @@ export class Context {
   }
 
   throw(
-    status: number,
+    status = 500,
     message = "Internal Server Error",
     init: ResponseInit = {},
     // deno-fmt-ignore
