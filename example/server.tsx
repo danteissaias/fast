@@ -1,4 +1,3 @@
-/** @jsxImportSource https://esm.sh/preact@10.9.0 */
 import fast, { Context } from "../mod.ts";
 import { h } from "https://esm.sh/preact@10.9.0";
 import render from "https://esm.sh/preact-render-to-string@5.2.1";
@@ -13,22 +12,28 @@ const pathname = (ctx: Context) => {
 };
 
 const response = (res: string) => {
-  const headers = { "content-type": "text/html" };
-  return new Response("<!DOCTYPE html>" + res, { headers });
+  return new Response(
+    "<!DOCTYPE html>" + res,
+    { headers: { "content-type": "text/html" } },
+  );
 };
 
-app.get("*", async (ctx, next) => {
+const merge = Object.assign;
+
+app.use(async (ctx: Context, next) => {
+  const { method } = ctx.request;
   const path = pathname(ctx);
   // @ts-ignore TODO
   const route = routes[path];
-  if (!route) return next(ctx);
-
-  let props = {};
-  if (route.loader) props = await route.loader();
-
-  const root = h(route.default, props);
-  const res = render(root);
-  return response(res);
+  if (method === "GET" || method === "POST") {
+    ctx.assert(route, 404, "Not Found");
+    const props = { data: {} };
+    if (route.loader) props.data = await route.loader();
+    if (method === "POST") merge(props.data, await route.action(ctx));
+    const root = h(route.default, props);
+    const res = render(root);
+    return response(res);
+  } else return next(ctx);
 });
 
 app.listen();
