@@ -16,8 +16,17 @@ export function compose(middlewares: Middleware[]) {
   return next = (ctx: Context) => {
     ctx.assert(++cur < max, 404, "Not Found");
     const res = middlewares[cur](ctx, next);
-    return Promise.resolve(res).then(decode);
+    return Promise.resolve(res)
+      .then(decode)
+      .catch(convert);
   };
+}
+
+// deno-lint-ignore no-explicit-any
+function convert(error: any) {
+  let { message, expose = false, init = { status: 500 } } = error;
+  if (!expose) message = "Internal Server Error";
+  return Response.json({ message }, init);
 }
 
 function isJSON(val: unknown) {
