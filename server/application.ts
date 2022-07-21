@@ -25,7 +25,7 @@ export interface Application {
   head(path: string, ...middlewares: Middleware[]): Application;
   use(...middlewares: Middleware[]): Application;
   handle(request: Request): Promise<Response>;
-  serve(init?: ServeInit): Promise<void>;
+  listen(init?: ServeInit): Promise<void>;
 }
 
 export class Application {
@@ -89,5 +89,5 @@ export class Application {
     return compose(middlewares)(ctx);
   };
 
-  serve = (opts?: ServeInit) => serve(this.handle, opts);
+  listen = (init?: ServeInit) => serve(this.handle, init);
 }

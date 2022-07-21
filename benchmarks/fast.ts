@@ -4,4 +4,4 @@ const app = fast();
 
 app.get("/", () => "Hello, World!");
 
-await app.serve();
+app.listen();
