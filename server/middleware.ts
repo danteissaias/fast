@@ -56,6 +56,7 @@ export function decode(res: unknown) {
     const headers = new Headers();
     headers.set("Content-Type", res.type);
     headers.set("Content-Length", res.size.toString());
+    return new Response(res, { headers });
   }
 
   throw new Error("Invalid response");
