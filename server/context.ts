@@ -32,7 +32,7 @@ export class Context {
     this.request = request;
     this.params = params ?? {};
     this.state = new State();
-    this.query = Object.fromEntries((this.url).searchParams.entries())
+    this.query = Object.fromEntries((this.url).searchParams.entries());
   }
 
   get url() {
