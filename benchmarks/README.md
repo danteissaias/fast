@@ -2,60 +2,66 @@
 
 | Module                                                                     | Version | Requests/sec | Percentage |
 | -------------------------------------------------------------------------- | ------: | -----------: | ---------: |
-| [Deno](https://github.com/danteissaias/fast/blob/3.0.0/benchmarks/deno.ts) | 0.147.0 |    111944.02 |    100.00% |
-| [Oak](https://github.com/danteissaias/fast/blob/3.0.0/benchmarks/oak.ts)   | v10.6.0 |     58367.67 |      52.1% |
-| [Fast](https://github.com/danteissaias/fast/blob/3.0.0/benchmarks/fast.ts) |   3.0.0 |    111706.82 |     99.78% |
+| [Deno](https://github.com/danteissaias/fast/blob/3.4.0/benchmarks/deno.ts) | 0.147.0 |     91456.35 |    100.00% |
+| [Oak](https://github.com/danteissaias/fast/blob/3.4.0/benchmarks/oak.ts)   | v10.6.0 |     53902.56 |     58.93% |
+| [Fast](https://github.com/danteissaias/fast/blob/3.4.0/benchmarks/fast.ts) |   3.4.0 |     90661.79 |     99.13% |
 
 ## Deno
 
 ```
-wrk -t12 -c400 -d30s http://127.0.0.1:8000
+oha -z 30s http://localhost:8000
 ```
 
 ```
-Running 30s test @ http://127.0.0.1:8000
-  12 threads and 400 connections
-  Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency     2.14ms    0.90ms  59.72ms   97.45%
-    Req/Sec     9.38k     4.01k   16.61k    62.44%
-  3362126 requests in 30.03s, 484.16MB read
-  Socket errors: connect 155, read 176, write 0, timeout 0
-Requests/sec: 111944.02
-Transfer/sec:     16.12MB
+Summary:
+  Success rate: 1.0000
+  Total:        30.0008 secs
+  Slowest:      0.0446 secs
+  Fastest:      0.0001 secs
+  Average:      0.0005 secs
+  Requests/sec: 91456.3482
+
+  Total data:   31.40 MiB
+  Size/request: 12 B
+  Size/sec:     1.05 MiB
 ```
 
 ## Oak
 
 ```
-wrk -t12 -c400 -d30s http://127.0.0.1:8000
+oha -z 30s http://localhost:8000
 ```
 
 ```
-Running 30s test @ http://127.0.0.1:8000
-  12 threads and 400 connections
-  Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency     4.14ms    1.52ms 106.66ms   98.91%
-    Req/Sec     4.89k     1.49k    8.33k    67.00%
-  1752523 requests in 30.03s, 254.04MB read
-  Socket errors: connect 155, read 325, write 0, timeout 0
-Requests/sec:  58367.67
-Transfer/sec:      8.46MB
+Summary:
+  Success rate: 1.0000
+  Total:        30.0008 secs
+  Slowest:      0.0467 secs
+  Fastest:      0.0002 secs
+  Average:      0.0009 secs
+  Requests/sec: 53902.5627
+
+  Total data:   18.51 MiB
+  Size/request: 12 B
+  Size/sec:     631.67 KiB
 ```
 
 ## Fast
 
 ```
-wrk -t12 -c400 -d30s http://127.0.0.1:8000
+oha -z 30s http://localhost:8000
 ```
 
 ```
-Running 30s test @ http://127.0.0.1:8000
-  12 threads and 400 connections
-  Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency     2.13ms  686.66us  62.14ms   98.40%
-    Req/Sec     9.36k     3.87k   24.67k    59.11%
-  3354951 requests in 30.03s, 486.33MB read
-  Socket errors: connect 155, read 165, write 0, timeout 0
-Requests/sec: 111706.82
-Transfer/sec:     16.19MB
+Summary:
+  Success rate: 1.0000
+  Total:        30.0007 secs
+  Slowest:      0.0233 secs
+  Fastest:      0.0001 secs
+  Average:      0.0006 secs
+  Requests/sec: 90661.7927
+
+  Total data:   33.72 MiB
+  Size/request: 13 B
+  Size/sec:     1.12 MiB
 ```
