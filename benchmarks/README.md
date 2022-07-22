@@ -2,7 +2,7 @@
 
 | Module                                                                     | Version | Requests/sec | Percentage |
 | -------------------------------------------------------------------------- | ------: | -----------: | ---------: |
-| [Deno](https://github.com/danteissaias/fast/blob/3.4.0/benchmarks/deno.ts) | 0.147.0 |     91456.35 |    100.00% |
+| [Deno](https://github.com/danteissaias/fast/blob/3.4.0/benchmarks/deno.ts) | 0.149.0 |     91456.35 |    100.00% |
 | [Oak](https://github.com/danteissaias/fast/blob/3.4.0/benchmarks/oak.ts)   | v10.6.0 |     53902.56 |     58.93% |
 | [Fast](https://github.com/danteissaias/fast/blob/3.4.0/benchmarks/fast.ts) |   3.4.0 |     90661.79 |     99.13% |
 
