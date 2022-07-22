@@ -26,11 +26,13 @@ export class Context {
   params: Record<string, string>;
   state: State;
   #url: URL | undefined;
+  query: Record<string, string>;
 
   constructor({ request, params }: ContextInit) {
     this.request = request;
     this.params = params ?? {};
     this.state = new State();
+    this.query = Object.fromEntries((this.url).searchParams.entries())
   }
 
   get url() {
