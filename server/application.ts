@@ -1,7 +1,7 @@
 import {
   serve,
   type ServeInit,
-} from "https://deno.land/std@0.148.0/http/server.ts";
+} from "https://deno.land/std@0.149.0/http/server.ts";
 import { Context } from "./context.ts";
 import { compose, type Middleware } from "./middleware.ts";
 
