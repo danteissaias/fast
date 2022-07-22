@@ -1,4 +1,7 @@
-import { assertEquals } from "https://deno.land/std@0.149.0/testing/asserts.ts";
+import {
+  assertEquals,
+  assertThrows,
+} from "https://deno.land/std@0.149.0/testing/asserts.ts";
 import { compose, Context, decode } from "../mod.ts";
 
 const request = new Request("http://localhost:8000");
@@ -12,7 +15,14 @@ Deno.test("compose", async () => {
 });
 
 Deno.test("decode", async () => {
-  const ret = "Hello, World!";
-  const res = await decode(ret).text();
-  assertEquals(res, "Hello, World!");
+  const a = "Hello, World!";
+  const res = await decode(a).text();
+  assertEquals(res, a);
+
+  const b = { abc: 123 };
+  const res2 = await decode(b).json();
+  assertEquals(res2, b);
+
+  const fn = () => decode(compose);
+  assertThrows(fn, "decode(): bad response");
 });

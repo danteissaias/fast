@@ -1,4 +1,4 @@
-import type { Context } from "./context.ts";
+import { Context, ServerError } from "./context.ts";
 
 export type Middleware = (
   ctx: Context,
@@ -50,5 +50,5 @@ export function decode(res: unknown) {
     return new Response(res, { headers });
   }
 
-  throw new Error("Invalid response");
+  throw new ServerError(500, "decode(): bad response");
 }

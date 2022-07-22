@@ -1,4 +1,4 @@
-class ServerError extends Error {
+export class ServerError extends Error {
   expose: boolean;
   init: ResponseInit;
 
