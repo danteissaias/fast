@@ -14,4 +14,10 @@ jobs:
       - uses: denoland/setup-deno@v1
         with:
           deno-version: v1.x
-      - run: deno test
+      - name: Run tests
+        run: deno test --coverage=coverage
+      - name: Generate coverage report
+        run: deno coverage ./coverage --lcov > coverage.lcov
+      - uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage.lcov
