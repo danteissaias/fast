@@ -3,7 +3,7 @@ import { Application } from "../mod.ts";
 
 const app = new Application();
 app.get("/", () => "Hello, World!");
-app.get("/:id", (ctx) => `Hello, ${ctx.params.id}!`);
+app.get("/msg/:id", (ctx) => `Hello, ${ctx.params.id}!`);
 app.post("/", () => "Hello, World!");
 
 Deno.test("app.handle", async () => {
@@ -19,7 +19,7 @@ Deno.test("app.handle", async () => {
   const res3 = await app.handle(req3).then((res) => res.json());
   assertEquals(res3, { message: "Not Found" });
 
-  const req4 = new Request("http://localhost:8000/123");
+  const req4 = new Request("http://localhost:8000/msg/123");
   const res4 = await app.handle(req4).then((res) => res.text());
   assertEquals(res4, "Hello, 123!");
 });
