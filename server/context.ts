@@ -25,7 +25,9 @@ export class Context {
   request: Request;
   params: Record<string, string>;
   state: State;
-  #url: URL | undefined;
+
+  #url?: URL;
+  #query?: Record<string, string>;
 
   constructor({ request, params }: ContextInit) {
     this.request = request;
@@ -39,7 +41,9 @@ export class Context {
   }
 
   get query() {
-    return Object.fromEntries((this.url).searchParams.entries());
+    const { searchParams } = this.url;
+    if (!this.#query) this.#query = Object.fromEntries(searchParams.entries());
+    return this.#query;
   }
 
   throw(
