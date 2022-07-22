@@ -3,6 +3,7 @@ import { Application } from "../mod.ts";
 
 const app = new Application();
 app.get("/", () => "Hello, World!");
+app.get("/:id", (ctx) => `Hello, ${ctx.params.id}!`);
 app.post("/", () => "Hello, World!");
 
 Deno.test("app.handle", async () => {
