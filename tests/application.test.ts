@@ -18,4 +18,8 @@ Deno.test("app.handle", async () => {
   const req3 = new Request("http://localhost:8000/404", { method: "POST" });
   const res3 = await app.handle(req3).then((res) => res.json());
   assertEquals(res3, { message: "Not Found" });
+
+  const req4 = new Request("http://localhost:8000/123");
+  const res4 = await app.handle(req4).then((res) => res.text());
+  assertEquals(res4, "Hello, 123!");
 });
