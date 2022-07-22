@@ -25,4 +25,18 @@ Deno.test("decode", async () => {
 
   const fn = () => decode(compose);
   assertThrows(fn, "decode(): bad response");
+
+  const c = null;
+  const res3 = decode(c);
+  assertEquals(res3.status, 204);
+
+  const d = new Blob(["Hello World!"]);
+  const res4 = await decode(d)
+    .blob()
+    .then((res) => res.text());
+  assertEquals(res4, await d.text());
+
+  const e = [1, 2, 3];
+  const res5 = await decode(e).json();
+  assertEquals(res5, [1, 2, 3]);
 });

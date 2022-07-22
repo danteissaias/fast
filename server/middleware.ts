@@ -38,17 +38,18 @@ export function decode(res: unknown) {
     res instanceof Uint8Array || res instanceof ReadableStream)
     return new Response(res);
 
-  if (isJSON(res) || Array.isArray(res)) return Response.json(res);
   if (res === null || res === undefined) {
     return new Response(null, { status: 204 });
   }
 
   if (res instanceof Blob || res instanceof File) {
     const headers = new Headers();
-    headers.set("Content-Type", res.type);
+    if (res.type) headers.set("Content-Type", res.type);
     headers.set("Content-Length", res.size.toString());
     return new Response(res, { headers });
   }
+
+  if (isJSON(res) || Array.isArray(res)) return Response.json(res);
 
   throw new ServerError(500, "decode(): bad response");
 }
