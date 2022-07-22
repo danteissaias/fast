@@ -2,14 +2,20 @@ import { assertEquals } from "https://deno.land/std@0.149.0/testing/asserts.ts";
 import { Application } from "../mod.ts";
 
 const app = new Application();
+app.use(async (ctx, next) => {
+  const res = await next(ctx);
+  res.headers.set("X-Hello", "123");
+  return res;
+});
 app.get("/", () => "Hello, World!");
 app.get("/msg/:id", (ctx) => `Hello, ${ctx.params.id}!`);
 app.post("/", () => "Hello, World!");
 
 Deno.test("app.handle", async () => {
   const req = new Request("http://localhost:8000");
-  const res = await app.handle(req).then((res) => res.text());
-  assertEquals(res, "Hello, World!");
+  const res = await app.handle(req);
+  assertEquals(await res.text(), "Hello, World!");
+  assertEquals(res.headers.get("X-Hello"), "123");
 
   const req2 = new Request("http://localhost:8000", { method: "POST" });
   const res2 = await app.handle(req2).then((res) => res.text());
