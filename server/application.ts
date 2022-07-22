@@ -6,20 +6,15 @@ import { Context } from "./context.ts";
 import { compose, type Middleware } from "./middleware.ts";
 
 // deno-lint-ignore no-explicit-any
-const convert = (error: any) => {
+function convert(error: any) {
   let { message, expose = false, init = { status: 500 } } = error;
   if (!expose) message = "Internal Server Error";
   return Response.json({ message }, init);
-};
+}
 
 interface Match {
   middlewares: Middleware[];
   params?: Record<string, string>;
-}
-
-interface Route {
-  pattern: URLPattern;
-  middlewares: Record<string, Middleware[]>;
 }
 
 export interface Application {
@@ -37,18 +32,15 @@ export interface Application {
 
 export class Application {
   #middlewares: Middleware[];
-  #routes: Record<string, Route>;
   #cache: Record<string, Match | null>;
-  // TODO: Replace with URLPatternList
-  get #patterns() {
-    return Object.values(this.#routes)
-      .map((r) => r.pattern);
-  }
+  #patterns: Set<URLPattern>;
+  #routes: Record<string, Middleware[]>;
 
   constructor() {
     this.#middlewares = [];
-    this.#routes = {};
     this.#cache = {};
+    this.#routes = {};
+    this.#patterns = new Set();
 
     // Define methods
     // deno-fmt-ignore-line
@@ -60,10 +52,12 @@ export class Application {
   }
 
   #add(pathname: string, method: string, middlewares: Middleware[]) {
-    const route = this.#routes[pathname] ?? {};
-    route.pattern = new URLPattern({ pathname });
-    route.middlewares = { [method]: middlewares };
-    this.#routes[pathname] = route;
+    const id = method + pathname;
+    const route = this.#routes[id];
+    const pattern = new URLPattern({ pathname });
+    this.#patterns.add(pattern);
+    if (route) route.push(...middlewares);
+    else this.#routes[id] = middlewares;
     return this;
   }
 
@@ -71,10 +65,9 @@ export class Application {
     const id = method + url;
     const hit = this.#cache[id];
     if (hit) return hit;
-    const pattern = this.#patterns.find((p) => p.test(url));
+    const pattern = [...this.#patterns].find((p) => p.test(url));
     if (!pattern) return this.#cache[id] = null;
-    const route = this.#routes[pattern.pathname];
-    const middlewares = route.middlewares[method];
+    const middlewares = this.#routes[method + pattern.pathname];
     if (!middlewares) return this.#cache[id] = null;
     if (pattern.pathname.includes(":")) {
       const exec = pattern.exec(url);
@@ -91,8 +84,9 @@ export class Application {
   handle = (request: Request) => {
     const match = this.#match(request.url, request.method);
     const ctx = new Context({ request, params: match?.params });
-    if (!match) return compose(this.#middlewares)(ctx).catch(convert);
-    const middlewares = this.#middlewares.concat(match.middlewares);
+    const middlewares = match
+      ? this.#middlewares.concat(match.middlewares)
+      : this.#middlewares;
     return compose(middlewares)(ctx).catch(convert);
   };
 

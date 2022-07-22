@@ -13,10 +13,10 @@ export function compose(middlewares: Middleware[]) {
   let cur = -1;
   const max = middlewares.length;
   let next: NextFunction;
-  return next = (ctx: Context) => {
+  return next = async (ctx: Context) => {
     ctx.assert(++cur < max, 404, "Not Found");
-    const res = middlewares[cur](ctx, next);
-    return Promise.resolve(res).then(decode);
+    const res = await middlewares[cur](ctx, next);
+    return decode(res);
   };
 }
 
