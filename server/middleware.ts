@@ -1,3 +1,5 @@
+import { isValidElement } from "https://esm.sh/preact@10.9.0";
+import render from "https://esm.sh/preact-render-to-string@5.2.1";
 import { Context, ServerError } from "./context.ts";
 
 export type Middleware = (
@@ -37,6 +39,12 @@ export function decode(res: unknown) {
   if (typeof res === "string" || res instanceof ArrayBuffer ||
     res instanceof Uint8Array || res instanceof ReadableStream)
     return new Response(res);
+
+  if (isValidElement(res)) {
+    const root = render(res);
+    const headers = { "content-type": "text/html" };
+    return new Response(root, { headers });
+  }
 
   if (res === null || res === undefined) {
     return new Response(null, { status: 204 });
