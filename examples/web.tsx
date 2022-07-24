@@ -5,7 +5,7 @@ const app = fast();
 
 const cwd = Deno.cwd();
 const fs = middleware.serve(cwd);
-app.get("/assets/", fs);
+app.get("/assets/*", fs);
 
 app.get("/", () => (
   <html lang="en" hidden>
