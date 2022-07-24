@@ -21,4 +21,4 @@ app.get("/", () => (
   </html>
 ));
 
-app.serve();
+await app.serve();
