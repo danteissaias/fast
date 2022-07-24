@@ -1,4 +1,4 @@
-/** @jsxImportSource https://esm.sh/preact@10.9.0 */
+/** @jsxImportSource https://esm.sh/react@18.2.0 */
 import fast, { middleware } from "../mod.ts";
 
 const app = fast();

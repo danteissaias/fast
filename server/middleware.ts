@@ -1,5 +1,5 @@
-import { isValidElement } from "https://esm.sh/preact@10.9.0";
-import render from "https://esm.sh/preact-render-to-string@5.2.1";
+import { isValidElement } from "https://esm.sh/react@18.2.0";
+import { renderToString } from "https://esm.sh/react-dom@18.2.0/server";
 import { Context, ServerError } from "./context.ts";
 
 export type Middleware = (
@@ -40,8 +40,9 @@ export function decode(res: unknown) {
     res instanceof Uint8Array || res instanceof ReadableStream)
     return new Response(res);
 
+  // @ts-ignore broken
   if (isValidElement(res)) {
-    const root = render(res);
+    const root = renderToString(res);
     const headers = { "content-type": "text/html" };
     return new Response(root, { headers });
   }

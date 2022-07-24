@@ -41,8 +41,12 @@ export class Context {
   }
 
   get query() {
-    const { searchParams } = this.url;
-    if (!this.#query) this.#query = Object.fromEntries(searchParams.entries());
+    if (!this.#query) {
+      const { searchParams } = this.url;
+      const entries = searchParams.entries();
+      this.#query = Object.fromEntries(entries);
+    }
+
     return this.#query;
   }
 
