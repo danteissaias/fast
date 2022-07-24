@@ -2,6 +2,7 @@ import {
   assertEquals,
   assertThrows,
 } from "https://deno.land/std@0.149.0/testing/asserts.ts";
+import { h } from "https://esm.sh/preact@10.9.0";
 import { compose, Context, decode } from "../mod.ts";
 
 const request = new Request("http://localhost:8000");
@@ -39,4 +40,8 @@ Deno.test("decode", async () => {
   const e = [1, 2, 3];
   const res5 = await decode(e).json();
   assertEquals(res5, [1, 2, 3]);
+
+  const f = h("h1", { children: "Hello, World!" });
+  const res6 = await decode(f).text();
+  assertEquals(res6, "<h1>Hello, World!</h1>");
 });
