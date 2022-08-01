@@ -16,6 +16,11 @@ class State {
   set = <T>(key: string, value: T) => this.#state[key] = value;
 }
 
+function parse(sp: URLSearchParams) {
+  const entries = sp.entries();
+  return Object.fromEntries(entries);
+}
+
 export interface ContextInit {
   request: Request;
   params?: Record<string, string>;
@@ -28,6 +33,7 @@ export class Context {
 
   #url?: URL;
   #query?: Record<string, string>;
+  #path?: string;
 
   constructor({ request, params }: ContextInit) {
     this.request = request;
@@ -35,20 +41,12 @@ export class Context {
     this.state = new State();
   }
 
-  get url() {
-    if (!this.#url) this.#url = new URL(this.request.url);
-    return this.#url;
-  }
-
-  get query() {
-    if (!this.#query) {
-      const { searchParams } = this.url;
-      const entries = searchParams.entries();
-      this.#query = Object.fromEntries(entries);
-    }
-
-    return this.#query;
-  }
+  // deno-fmt-ignore
+  get url() { return this.#url ?? (this.#url = new URL(this.request.url)); }
+  // deno-fmt-ignore
+  get path() { return this.#path ?? (this.#path = this.url.pathname); }
+  // deno-fmt-ignore
+  get query() { return this.#query ?? (this.#query = parse(this.url.searchParams)); }
 
   throw(
     status = 500,
