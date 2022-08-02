@@ -1,13 +1,8 @@
-import fast from "../mod.ts";
-import { etag } from "../middleware/etag.ts";
+import fast, { middleware } from "../mod.ts";
 
 const app = fast();
-
-app.use(
-  etag({
-    weak: true,
-  }),
-);
+const etag = middleware.etag({ weak: true });
+app.use(etag);
 
 app.get("/", (_ctx) => {
   return "Hello, world";

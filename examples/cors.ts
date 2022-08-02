@@ -1,18 +1,17 @@
-import fast from "../mod.ts";
-import { cors } from "../middleware/mod.ts";
+import fast, { middleware } from "../mod.ts";
+
+const opts = {
+  origin: "*",
+  allowedHeaders: ["Content-Type", "Charset"],
+  methods: ["GET, HEAD, OPTIONS"],
+  credentials: true,
+  exposedHeaders: ["Content-Type"],
+  maxAge: 86400,
+};
 
 const app = fast();
-
-app.use(
-  cors({
-    origin: "*",
-    allowedHeaders: ["Content-Type", "Charset"],
-    methods: ["GET, HEAD, OPTIONS"],
-    credentials: true,
-    exposedHeaders: ["Content-Type"],
-    maxAge: 86400,
-  }),
-);
+const cors = middleware.cors(opts);
+app.use(cors);
 
 app.get("/", (_ctx) => {
   return "Hello, world";
