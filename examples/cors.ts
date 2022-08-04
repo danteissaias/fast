@@ -10,6 +10,7 @@ const opts = {
 };
 
 const app = fast();
+
 const cors = middleware.cors(opts);
 app.use(cors);
 
