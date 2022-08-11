@@ -11,14 +11,22 @@ export type NextFunction = (
   ctx: Context,
 ) => Promise<Response>;
 
+// deno-lint-ignore no-explicit-any
+function convert(error: any) {
+  let { message, expose = false, init = { status: 500 } } = error;
+  if (!expose) message = "Internal Server Error";
+  return Response.json({ message }, init);
+}
+
 export function compose(middlewares: Middleware[]) {
   let cur = -1;
   const max = middlewares.length;
   let next: NextFunction;
-  return next = async (ctx: Context) => {
+  return next = (ctx: Context) => {
     ctx.assert(++cur < max, 404, "Not Found");
-    const res = await middlewares[cur](ctx, next);
-    return decode(res);
+    return Promise.resolve(middlewares[cur](ctx, next))
+      .then(decode)
+      .catch(convert);
   };
 }
 

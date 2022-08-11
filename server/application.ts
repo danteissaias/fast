@@ -5,13 +5,6 @@ import {
 import { Context } from "./context.ts";
 import { compose, type Middleware } from "./middleware.ts";
 
-// deno-lint-ignore no-explicit-any
-function convert(error: any) {
-  let { message, expose = false, init = { status: 500 } } = error;
-  if (!expose) message = "Internal Server Error";
-  return Response.json({ message }, init);
-}
-
 interface Match {
   middlewares: Middleware[];
   params?: Record<string, string>;
@@ -87,7 +80,7 @@ export class Application {
     const middlewares = match
       ? this.#middlewares.concat(match.middlewares)
       : this.#middlewares;
-    return compose(middlewares)(ctx).catch(convert);
+    return compose(middlewares)(ctx);
   };
 
   serve = (opts?: ServeInit) => serve(this.handle, opts);
