@@ -15,7 +15,8 @@ export type NextFunction = (
 function convert(error: any) {
   let { message, expose = false, init = { status: 500 } } = error;
   if (!expose) message = "Internal Server Error";
-  return Response.json({ message }, init);
+  const { status } = init;
+  return Response.json({ error: { status, message } }, init);
 }
 
 export function compose(middlewares: Middleware[]) {
