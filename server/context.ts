@@ -48,6 +48,15 @@ export class Context {
   // deno-fmt-ignore
   get query() { return this.#query ?? (this.#query = parse(this.url.searchParams)); }
 
+  /** Validate and decode request body.  */
+  async json() {
+    try {
+      return await this.request.json();
+    } catch {
+      this.throw(400, "Malformed request body.");
+    }
+  }
+
   throw(
     status = 500,
     message = "Internal Server Error",
