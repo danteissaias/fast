@@ -5,6 +5,8 @@ import {
 import { Context } from "./context.ts";
 import { compose, type Middleware } from "./middleware.ts";
 
+const fallback = (ctx: Context) => ctx.throw(404, "Not Found");
+
 interface Match {
   middlewares: Middleware[];
   params?: Record<string, string>;
@@ -78,8 +80,8 @@ export class Application {
     const match = this.#match(request.url, request.method);
     const ctx = new Context({ request, params: match?.params });
     const middlewares = match
-      ? this.#middlewares.concat(match.middlewares)
-      : this.#middlewares;
+      ? this.#middlewares.concat(match.middlewares, fallback)
+      : this.#middlewares.concat(fallback);
     return compose(middlewares)(ctx);
   };
 

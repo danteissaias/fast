@@ -21,11 +21,9 @@ function convert(error: any) {
 
 export function compose(middlewares: Middleware[]) {
   let cur = -1;
-  const max = middlewares.length;
   let next: NextFunction;
   return next = (ctx: Context) => {
-    ctx.assert(++cur < max, 404, "Not Found");
-    return Promise.resolve(middlewares[cur](ctx, next))
+    return Promise.resolve(middlewares[++cur](ctx, next))
       .then(decode)
       .catch(convert);
   };
