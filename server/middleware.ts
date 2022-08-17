@@ -22,10 +22,13 @@ function convert(error: any) {
 export function compose(middlewares: Middleware[]) {
   let cur = -1;
   let next: NextFunction;
-  return next = (ctx: Context) => {
-    return Promise.resolve(middlewares[++cur](ctx, next))
-      .then(decode)
-      .catch(convert);
+  return next = async (ctx: Context) => {
+    try {
+      const res = await middlewares[++cur](ctx, next);
+      return decode(res);
+    } catch (error) {
+      return convert(error);
+    }
   };
 }
 
