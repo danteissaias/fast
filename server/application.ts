@@ -14,9 +14,6 @@ export interface Application {
   delete(path: string, ...middlewares: Middleware[]): Application;
   options(path: string, ...middlewares: Middleware[]): Application;
   head(path: string, ...middlewares: Middleware[]): Application;
-  use(...middlewares: Middleware[]): Application;
-  handle(request: Request): Promise<Response>;
-  serve(opts?: Deno.ServeOptions): Promise<void>;
 }
 
 export class Application {
@@ -66,7 +63,7 @@ export class Application {
   }
 
   use(...middlewares: Middleware[]) {
-    this.#middlewares = this.#middlewares.concat(middlewares);
+    this.#middlewares.push(...middlewares);
     return this;
   }
 

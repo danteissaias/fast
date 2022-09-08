@@ -1,11 +1,8 @@
 export class ServerError extends Error {
-  expose: boolean;
-  init: ResponseInit;
-
-  constructor(status: number, message?: string, init: ResponseInit = {}) {
-    super(message ?? "Internal Server Error");
-    this.init = { status, ...init };
-    this.expose = status < 500;
+  status: number;
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
   }
 }
 
@@ -23,24 +20,18 @@ export class Context {
     this.params = params ?? {};
   }
 
-  json = () =>
-    this.request.json()
-      .catch(() => this.throw(400, "Malformed request body."));
-
   throw(
-    status = 500,
-    message = "Internal Server Error",
-    init: ResponseInit = {},
+    status: number,
+    message: string,
     // deno-fmt-ignore
-  ) { throw new ServerError(status, message, init); }
+  ) { throw new ServerError(status, message); }
 
   assert(
     expr: unknown,
-    status = 500,
-    message = "Assertion failed.",
-    init: ResponseInit = {},
+    status: number,
+    message: string,
   ): asserts expr {
     if (expr) return;
-    throw new ServerError(status, message, init);
+    throw new ServerError(status, message);
   }
 }

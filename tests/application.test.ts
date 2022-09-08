@@ -1,7 +1,7 @@
 import { assertEquals } from "https://deno.land/std@0.149.0/testing/asserts.ts";
-import { Application } from "../mod.ts";
+import fast from "../mod.ts";
 
-const app = new Application();
+const app = fast();
 app.use(async (ctx, next) => {
   const res = await next(ctx);
   res.headers.set("X-Hello", "123");

@@ -6,11 +6,11 @@ const params = {};
 const ctx = new Context({ request, params });
 
 Deno.test("ctx.throw", () => {
-  const fn = () => ctx.throw();
+  const fn = () => ctx.throw(500, "Internal Server Error");
   assertThrows(fn);
 });
 
 Deno.test("ctx.assert", () => {
-  const fn = () => ctx.assert(false);
+  const fn = () => ctx.assert(false, 400, "Bad Request");
   assertThrows(fn);
 });
