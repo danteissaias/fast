@@ -1,11 +1,5 @@
-import {
-  serve,
-  type ServeInit,
-} from "https://deno.land/std@0.149.0/http/server.ts";
 import { Context } from "./context.ts";
 import { compose, type Middleware } from "./middleware.ts";
-
-const fallback = (ctx: Context) => ctx.throw(404, "Not Found");
 
 interface Match {
   middlewares: Middleware[];
@@ -22,7 +16,7 @@ export interface Application {
   head(path: string, ...middlewares: Middleware[]): Application;
   use(...middlewares: Middleware[]): Application;
   handle(request: Request): Promise<Response>;
-  serve(init?: ServeInit): Promise<void>;
+  serve(opts?: Deno.ServeOptions): Promise<void>;
 }
 
 export class Application {
@@ -80,10 +74,10 @@ export class Application {
     const match = this.#match(request.url, request.method);
     const ctx = new Context({ request, params: match?.params });
     const middlewares = match
-      ? this.#middlewares.concat(match.middlewares, fallback)
-      : this.#middlewares.concat(fallback);
+      ? this.#middlewares.concat(match.middlewares)
+      : this.#middlewares;
     return compose(middlewares)(ctx);
   };
 
-  serve = (opts?: ServeInit) => serve(this.handle, opts);
+  serve = (opts?: Deno.ServeOptions) => Deno.serve(this.handle, opts);
 }
