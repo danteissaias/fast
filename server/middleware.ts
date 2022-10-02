@@ -37,7 +37,7 @@ export function compose(middlewares: Middleware[]) {
   return next = async (ctx: Context) => {
     try {
       const good = ++cur < middlewares.length;
-      ctx.assert(good, 404, "Not Found");
+      ctx.assert(good, 404, "Not found");
       const res = await middlewares[cur](ctx, next);
       return decode(res);
     } catch (error) {
