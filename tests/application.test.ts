@@ -37,7 +37,7 @@ Deno.test("app.#match", async () => {
   assertEquals(res1, "Hello, World!");
   assertEquals(res2, "Another page!");
   assertEquals(status, 404);
-  assertEquals(message, "Not Found");
+  assertEquals(message, "Not found");
 });
 
 Deno.test("app.handle", async () => {
