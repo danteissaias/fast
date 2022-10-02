@@ -20,6 +20,11 @@ export class Context {
     this.params = params ?? {};
   }
 
+  get body() {
+    return this.request.json()
+      .catch(() => this.throw(400, "Bad request"));
+  }
+
   throw(
     status: number,
     message: string,
