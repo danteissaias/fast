@@ -1,22 +1,22 @@
 import { Context } from "./context.ts";
-import { compose, type Middleware } from "./middleware.ts";
+import { compose, type Middleware } from "./next.ts";
 
 interface Match {
   middlewares: Middleware[];
   params?: Record<string, string>;
 }
 
-export interface Application {
-  get(path: string, ...middlewares: Middleware[]): Application;
-  post(path: string, ...middlewares: Middleware[]): Application;
-  put(path: string, ...middlewares: Middleware[]): Application;
-  patch(path: string, ...middlewares: Middleware[]): Application;
-  delete(path: string, ...middlewares: Middleware[]): Application;
-  options(path: string, ...middlewares: Middleware[]): Application;
-  head(path: string, ...middlewares: Middleware[]): Application;
+export interface WebApp {
+  get(path: string, ...middlewares: Middleware[]): WebApp;
+  post(path: string, ...middlewares: Middleware[]): WebApp;
+  put(path: string, ...middlewares: Middleware[]): WebApp;
+  patch(path: string, ...middlewares: Middleware[]): WebApp;
+  delete(path: string, ...middlewares: Middleware[]): WebApp;
+  options(path: string, ...middlewares: Middleware[]): WebApp;
+  head(path: string, ...middlewares: Middleware[]): WebApp;
 }
 
-export class Application {
+export class WebApp {
   #middlewares: Middleware[];
   #routes: Map<string, Middleware[]>;
 

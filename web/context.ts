@@ -1,6 +1,6 @@
 export class ServerError extends Error {
   status: number;
-  constructor(status: number, message: string) {
+  constructor(status = 500, message: string) {
     super(message);
     this.status = status;
   }

@@ -1,4 +1,4 @@
-import { Application } from "./server/application.ts";
-export default () => new Application();
-export { Context } from "./server/context.ts";
-export type { Middleware, NextFunction } from "./server/middleware.ts";
+import { WebApp } from "./web/app.ts";
+export default () => new WebApp();
+export { Context } from "./web/context.ts";
+export type { Middleware, NextFunction } from "./web/next.ts";
