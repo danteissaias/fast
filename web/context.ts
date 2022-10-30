@@ -1,10 +1,4 @@
-export class ServerError extends Error {
-  status: number;
-  constructor(status = 500, message: string) {
-    super(message);
-    this.status = status;
-  }
-}
+import { ServerError } from "./types.ts";
 
 export interface ContextInit {
   request: Request;

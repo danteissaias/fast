@@ -1,5 +1,8 @@
 import { Context } from "./context.ts";
-import { compose, type Middleware } from "./next.ts";
+import compose from "./compose.ts";
+import type { Middleware } from "./types.ts";
+
+const fallback: Middleware = (ctx: Context) => ctx.throw(404, "Not found.");
 
 interface Match {
   middlewares: Middleware[];
@@ -81,8 +84,8 @@ export class WebApp {
     const match = this.#match(request.url, request.method);
     const ctx = new Context({ request, params: match?.params });
     const middlewares = match
-      ? this.#middlewares.concat(match.middlewares)
-      : this.#middlewares;
+      ? this.#middlewares.concat(match.middlewares, fallback)
+      : this.#middlewares.concat(fallback);
     return compose(middlewares)(ctx);
   };
 
