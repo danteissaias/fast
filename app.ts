@@ -1,8 +1,12 @@
 import { Context } from "./context.ts";
-import compose from "./compose.ts";
 import type { Middleware } from "./types.ts";
 
-const fallback: Middleware = (ctx: Context) => ctx.throw(404, "Not found.");
+const NotFound = {
+  code: "notFound",
+  message: "The requested resource doesn't exist.",
+};
+
+const fallback: Middleware = (ctx: Context) => ctx.throw(404, NotFound);
 
 interface Match {
   middlewares: Middleware[];
@@ -80,11 +84,11 @@ export class WebApp {
 
   handle = (request: Request) => {
     const match = this.#match(request.url, request.method);
-    const ctx = new Context({ request, params: match?.params });
     const middlewares = match
       ? this.#middlewares.concat(match.middlewares, fallback)
       : this.#middlewares.concat(fallback);
-    return compose(middlewares)(ctx);
+    const ctx = new Context({ request, params: match?.params, middlewares });
+    return ctx.next();
   };
 
   serve = (opts?: Deno.ServeOptions) => Deno.serve(this.handle, opts);

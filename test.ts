@@ -14,8 +14,8 @@ Deno.test("404", async () => {
   assertEquals(res.status, 404);
 });
 
-app.use(async (ctx, next) => {
-  const res = await next(ctx);
+app.use(async (ctx) => {
+  const res = await ctx.next();
   res.headers.set("x-cache-hit", "1");
   return res;
 });
@@ -41,9 +41,14 @@ for (const method of methods) {
   });
 }
 
-app.get("/assert", (ctx: Context) => ctx.assert(false, 400, "Bad request"));
-app.get("/assert2", (ctx: Context) => ctx.assert(true, 400, "Bad request"));
-app.get("/throw", (ctx: Context) => ctx.assert(false, 500, "Unknown err"));
+const Error = {
+  code: "",
+  message: "",
+};
+
+app.get("/assert", (ctx: Context) => ctx.assert(false, 400, Error));
+app.get("/assert2", (ctx: Context) => ctx.assert(true, 400, Error));
+app.get("/throw", (ctx: Context) => ctx.assert(false, 500, Error));
 
 Deno.test("ctx.assert", async () => {
   const req = makeRequest("/assert");
