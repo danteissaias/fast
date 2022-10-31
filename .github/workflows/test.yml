@@ -15,4 +15,9 @@ jobs:
         with:
           deno-version: v1.x
       - name: Run tests
-        run: deno test --unstable
+        run: ./coverage.sh
+      - uses: codecov/codecov-action@v3
+        with:
+          files: ./cov_profile.lcov
+          fail_ci_if_error: true
+          verbose: true
