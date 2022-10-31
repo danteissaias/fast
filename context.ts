@@ -1,5 +1,6 @@
 import decode from "./decode.ts";
-import { type ErrorInit, type Middleware, ServerError } from "./types.ts";
+import type { ErrorInit, Middleware } from "./types.ts";
+import { ServerError } from "./types.ts";
 
 export interface ContextInit {
   request: Request;
