@@ -1,4 +1,4 @@
-import { WebApp } from "./web/app.ts";
+import { WebApp } from "./app.ts";
 export default () => new WebApp();
-export { Context } from "./web/context.ts";
-export type { Middleware, NextFunction } from "./web/types.ts";
+export { Context } from "./context.ts";
+export type { Middleware, NextFunction } from "./types.ts";

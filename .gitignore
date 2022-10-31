@@ -1,2 +1,4 @@
 .vscode
 bench.ts
+cov_profile
+cov_profile.lcov

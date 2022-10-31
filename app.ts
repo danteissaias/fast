@@ -49,9 +49,7 @@ export class WebApp {
 
   #add(pathname: string, method: string, middlewares: Middleware[]) {
     const id = method + pathname;
-    const route = this.#routes.get(id);
-    if (route) route.push(...middlewares);
-    else this.#routes.set(id, middlewares);
+    this.#routes.set(id, middlewares);
 
     const pattern = new URLPattern({ pathname });
     const has = this.#patterns.find((p) => p.pathname === pathname);

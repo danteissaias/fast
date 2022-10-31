@@ -16,7 +16,7 @@ export class Context {
 
   get body() {
     return this.request.json()
-      .catch(() => this.throw(400, "Bad request"));
+      .catch(() => this.throw(400, "Bad request."));
   }
 
   throw(
