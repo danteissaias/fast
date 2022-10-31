@@ -18,6 +18,7 @@ jobs:
         run: ./coverage.sh
       - uses: codecov/codecov-action@v3
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
           files: ./cov_profile.lcov
           fail_ci_if_error: true
           verbose: true
