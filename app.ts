@@ -1,12 +1,13 @@
 import { Context } from "./context.ts";
 import type { Middleware } from "./types.ts";
 
-const NotFound = {
+const notFound = {
+  status: 404,
   code: "notFound",
   message: "The requested resource doesn't exist.",
 };
 
-const fallback: Middleware = (ctx: Context) => ctx.throw(404, NotFound);
+const fallback: Middleware = (ctx: Context) => ctx.throw(notFound);
 
 interface Match {
   middlewares: Middleware[];

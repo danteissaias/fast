@@ -8,7 +8,8 @@ export interface ContextInit {
   params?: Record<string, string>;
 }
 
-const BadRequest = {
+const badRequest = {
+  status: 400,
   code: "badRequest",
   message: "Malformed request body.",
 };
@@ -44,21 +45,19 @@ export class Context {
 
   get body() {
     return this.request.json()
-      .catch(() => this.throw(400, BadRequest));
+      .catch(() => this.throw(badRequest));
   }
 
   throw(
-    status: number,
     error: ErrorInit,
     // deno-fmt-ignore
-  ) { throw new ServerError(status, error); }
+  ) { throw new ServerError(error); }
 
   assert(
     expr: unknown,
-    status: number,
     error: ErrorInit,
   ): asserts expr {
     if (expr) return;
-    throw new ServerError(status, error);
+    throw new ServerError(error);
   }
 }

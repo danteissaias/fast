@@ -5,6 +5,7 @@ export type Middleware = (
 ) => Promise<unknown> | unknown;
 
 export interface ErrorInit {
+  status: number;
   code: string;
   message: string;
 }
@@ -12,9 +13,9 @@ export interface ErrorInit {
 export class ServerError extends Error {
   status: number;
   code: string;
-  constructor(status = 500, error: ErrorInit) {
+  constructor(error: ErrorInit) {
     super(error.message);
     this.code = error.code;
-    this.status = status;
+    this.status = error.status;
   }
 }

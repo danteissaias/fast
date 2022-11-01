@@ -41,14 +41,15 @@ for (const method of methods) {
   });
 }
 
-const Error = {
+const err = {
+  status: 400,
   code: "",
   message: "",
 };
 
-app.get("/assert", (ctx: Context) => ctx.assert(false, 400, Error));
-app.get("/assert2", (ctx: Context) => ctx.assert(true, 400, Error));
-app.get("/throw", (ctx: Context) => ctx.assert(false, 500, Error));
+app.get("/assert", (ctx: Context) => ctx.assert(false, err));
+app.get("/assert2", (ctx: Context) => ctx.assert(true, err));
+app.get("/throw", (ctx: Context) => ctx.throw(err));
 
 Deno.test("ctx.assert", async () => {
   const req = makeRequest("/assert");
@@ -63,7 +64,7 @@ Deno.test("ctx.assert", async () => {
 Deno.test("ctx.throw", async () => {
   const req = makeRequest("/throw");
   const res = await app.handle(req);
-  assertEquals(res.status, 500);
+  assertEquals(res.status, 400);
 });
 
 app.get("/pages/:id", (ctx) => ctx.params.id);
