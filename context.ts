@@ -35,10 +35,10 @@ export class Context {
       const {
         status = 500,
         message = "An unknown error occurred.",
-        ...rest
+        init: { ...rest },
       } = error;
       const init = { status };
-      const body = { error: { status, message, ...rest } };
+      const body = { error: { ...rest, status, message } };
       return Response.json(body, init);
     }
   }
