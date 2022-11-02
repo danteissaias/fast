@@ -3,7 +3,6 @@ import type { Middleware } from "./types.ts";
 
 const notFound = {
   status: 404,
-  code: "notFound",
   message: "The requested resource doesn't exist.",
 };
 

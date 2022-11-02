@@ -4,18 +4,17 @@ export type Middleware = (
   ctx: Context,
 ) => Promise<unknown> | unknown;
 
-export interface ErrorInit {
+export type ErrorInit = {
   status: number;
-  code: string;
   message: string;
-}
+} & Record<string, string | number>;
 
 export class ServerError extends Error {
   status: number;
-  code: string;
-  constructor(error: ErrorInit) {
-    super(error.message);
-    this.code = error.code;
-    this.status = error.status;
+  init: ErrorInit;
+  constructor({ message, status, ...rest }: ErrorInit) {
+    super(message);
+    this.status = status;
+    this.init = { message, status, ...rest };
   }
 }

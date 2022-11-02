@@ -10,7 +10,6 @@ export interface ContextInit {
 
 const badRequest = {
   status: 400,
-  code: "badRequest",
   message: "Malformed request body.",
 };
 
@@ -35,11 +34,11 @@ export class Context {
     } catch (error) {
       const {
         status = 500,
-        code = "unknownErr",
         message = "An unknown error occurred.",
+        ...rest
       } = error;
       const init = { status };
-      const body = { error: { code, message } };
+      const body = { error: { status, message, ...rest } };
       return Response.json(body, init);
     }
   }
