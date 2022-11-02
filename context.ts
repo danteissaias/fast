@@ -19,6 +19,7 @@ export class Context {
   params: Record<string, string>;
   #middlewares: Middleware[];
   #cur = -1;
+  status = 200;
 
   constructor({ request, params, middlewares }: ContextInit) {
     this.request = request;
@@ -30,7 +31,7 @@ export class Context {
     try {
       const cur = ++this.#cur;
       const res = await this.#middlewares[cur](this);
-      return decode(res);
+      return decode(res, this.status);
     } catch (error) {
       const {
         status = 500,

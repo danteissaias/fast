@@ -8,9 +8,9 @@ function isJSON(val: unknown) {
   }
 }
 
-export default function decode(res: unknown) {
+export default function decode(res: unknown, status: number) {
   if (res instanceof Response) return res;
-  if (typeof res === "string") return new Response(res);
-  if (isJSON(res) || Array.isArray(res)) return Response.json(res);
+  if (typeof res === "string") return new Response(res, { status });
+  if (isJSON(res) || Array.isArray(res)) return Response.json(res, { status });
   return new Response(null, { status: 204 });
 }
