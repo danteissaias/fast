@@ -35,7 +35,7 @@ export class Context {
       const {
         status = 500,
         message = "An unknown error occurred.",
-        init: { ...rest },
+        init: { ...rest } = {},
       } = error;
       const init = { status };
       const body = { error: { ...rest, status, message } };
