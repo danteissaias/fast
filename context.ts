@@ -32,14 +32,11 @@ export class Context {
       const res = await this.#middlewares[cur](this);
       return decode(res, this.status);
     } catch (error) {
-      const {
-        status = 500,
-        message = "An unknown error occurred.",
-        init: { ...rest } = {},
-      } = error;
-      const init = { status };
-      const body = { error: { ...rest, status, message } };
-      return Response.json(body, init);
+      const def = "An unknown error occured";
+      let { status = 500, message = def, expose = false } = error;
+      if (!expose) message = def;
+      const body = { error: { status, message } };
+      return Response.json(body, { status });
     }
   }
 

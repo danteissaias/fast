@@ -12,6 +12,7 @@ export type ErrorInit = {
 export class ServerError extends Error {
   status: number;
   init: ErrorInit;
+  expose = true;
   constructor({ message, status, ...rest }: ErrorInit) {
     super(message);
     this.status = status;
