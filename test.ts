@@ -50,9 +50,8 @@ const err = {
 app.get("/assert", (ctx: Context) => ctx.assert(false, err));
 app.get("/assert2", (ctx: Context) => ctx.assert(true, err));
 app.get("/throw", (ctx: Context) => ctx.throw(err));
-app.get("/throw2", (ctx: Context) => {
-  throw new Error();
-});
+// deno-fmt-ignore
+app.get("/throw2", () => { throw new Error() });
 
 Deno.test("ctx.assert", async () => {
   const req = makeRequest("/assert");
