@@ -50,6 +50,9 @@ const err = {
 app.get("/assert", (ctx: Context) => ctx.assert(false, err));
 app.get("/assert2", (ctx: Context) => ctx.assert(true, err));
 app.get("/throw", (ctx: Context) => ctx.throw(err));
+app.get("/throw2", (ctx: Context) => {
+  throw new Error();
+});
 
 Deno.test("ctx.assert", async () => {
   const req = makeRequest("/assert");
@@ -65,6 +68,12 @@ Deno.test("ctx.throw", async () => {
   const req = makeRequest("/throw");
   const res = await app.handle(req);
   assertEquals(res.status, 400);
+
+  const req2 = makeRequest("/throw2");
+  const res2 = await app.handle(req2);
+  const data = await res2.json();
+  assertEquals(res2.status, 500);
+  assertEquals(data.error.message, "An unknown error occured");
 });
 
 app.get("/pages/:id", (ctx) => ctx.params.id);
