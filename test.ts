@@ -14,19 +14,6 @@ Deno.test("404", async () => {
   assertEquals(res.status, 404);
 });
 
-app.use(async (ctx) => {
-  const res = await ctx.next();
-  res.headers.set("x-cache-hit", "1");
-  return res;
-});
-
-Deno.test("app.use", async () => {
-  const req = makeRequest("/");
-  const res = await app.handle(req);
-  assertEquals(res.status, 200);
-  assertEquals(res.headers.get("x-cache-hit"), "1");
-});
-
 // deno-fmt-ignore-line
 const methods = ['get', 'post', 'put', 'patch', 'delete', 'options', 'head'] as const;
 for (const method of methods) {
@@ -72,7 +59,7 @@ Deno.test("ctx.throw", async () => {
   const res2 = await app.handle(req2);
   const data = await res2.json();
   assertEquals(res2.status, 500);
-  assertEquals(data.error.message, "An unknown error occured");
+  assertEquals(data.error.message, "An unknown error occurred.");
 });
 
 app.get("/pages/:id", (ctx) => ctx.params.id);
@@ -101,6 +88,7 @@ app.get("/string", () => "abc");
 app.get("/array", () => [1, 2, 3]);
 app.get("/json", () => ({ abc: 123 }));
 app.get("/void", () => {});
+app.get("/res", () => new Response("Hello", { status: 201 }));
 
 Deno.test("decode", async () => {
   const req = makeRequest("/string");
@@ -124,4 +112,8 @@ Deno.test("decode", async () => {
   const req4 = makeRequest("/void");
   const res4 = await app.handle(req4);
   assertEquals(res4.status, 204);
+
+  const req5 = makeRequest("/res");
+  const res5 = await app.handle(req5);
+  assertEquals(res5.status, 201);
 });

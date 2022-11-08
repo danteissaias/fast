@@ -1,39 +1,34 @@
 import { Context } from "./context.ts";
-import type { Middleware } from "./types.ts";
+import decode from "./decode.ts";
+import { Handler, ServerError } from "./types.ts";
 
 const notFound = {
   status: 404,
   message: "The requested resource doesn't exist.",
 };
 
-const fallback: Middleware = (ctx: Context) => ctx.throw(notFound);
-
 interface Match {
-  middlewares: Middleware[];
+  handler: Handler;
   params?: Record<string, string>;
 }
 
 export interface WebApp {
-  get(path: string, ...middlewares: Middleware[]): WebApp;
-  post(path: string, ...middlewares: Middleware[]): WebApp;
-  put(path: string, ...middlewares: Middleware[]): WebApp;
-  patch(path: string, ...middlewares: Middleware[]): WebApp;
-  delete(path: string, ...middlewares: Middleware[]): WebApp;
-  options(path: string, ...middlewares: Middleware[]): WebApp;
-  head(path: string, ...middlewares: Middleware[]): WebApp;
+  get(path: string, handler: Handler): WebApp;
+  post(path: string, handler: Handler): WebApp;
+  put(path: string, handler: Handler): WebApp;
+  patch(path: string, handler: Handler): WebApp;
+  delete(path: string, handler: Handler): WebApp;
+  options(path: string, handler: Handler): WebApp;
+  head(path: string, handler: Handler): WebApp;
 }
 
 export class WebApp {
-  #middlewares: Middleware[];
-  #routes: Map<string, Middleware[]>;
-
+  #routes: Map<string, Handler>;
   #patterns: URLPattern[];
   #cache: Record<string, Match | null>;
 
   constructor() {
-    this.#middlewares = [];
     this.#routes = new Map();
-
     this.#patterns = [];
     this.#cache = {};
 
@@ -41,19 +36,14 @@ export class WebApp {
     // deno-fmt-ignore-line
     const methods = ['get', 'post', 'put', 'patch', 'delete', 'options', 'head'] as const;
     for (const method of methods) {
-      this[method] = (path, ...middlewares) =>
-        this.#add(path, method.toUpperCase(), middlewares);
+      this[method] = (path, handler) =>
+        this.#add(path, method.toUpperCase(), handler);
     }
   }
 
-  use(...middlewares: Middleware[]) {
-    this.#middlewares.push(...middlewares);
-    return this;
-  }
-
-  #add(pathname: string, method: string, middlewares: Middleware[]) {
+  #add(pathname: string, method: string, handler: Handler) {
     const id = method + pathname;
-    this.#routes.set(id, middlewares);
+    this.#routes.set(id, handler);
 
     const pattern = new URLPattern({ pathname });
     const has = this.#patterns.find((p) => p.pathname === pathname);
@@ -72,23 +62,29 @@ export class WebApp {
     const { pathname } = pattern;
 
     const id = method + pathname;
-    const middlewares = this.#routes.get(id);
-    if (!middlewares) return this.#cache[cid] = null;
+    const handler = this.#routes.get(id);
+    if (!handler) return this.#cache[cid] = null;
 
     if (pathname.includes(":")) {
       const exec = pattern.exec(path);
       const params = exec?.pathname.groups;
-      return this.#cache[cid] = { middlewares, params };
-    } else return this.#cache[cid] = { middlewares };
+      return this.#cache[cid] = { handler, params };
+    } else return this.#cache[cid] = { handler };
   }
 
-  handle = (request: Request) => {
-    const match = this.#match(request.url, request.method);
-    const middlewares = match
-      ? this.#middlewares.concat(match.middlewares, fallback)
-      : this.#middlewares.concat(fallback);
-    const ctx = new Context({ request, params: match?.params, middlewares });
-    return ctx.next();
+  handle = async (request: Request) => {
+    try {
+      const match = this.#match(request.url, request.method);
+      const ctx: Context = new Context({ request });
+      ctx.assert(match, notFound);
+      ctx.params = match.params ?? {};
+      const res = await match.handler(ctx);
+      return decode(res, ctx.status);
+    } catch (error) {
+      const err = ServerError.from(error);
+      const res = err.serialize();
+      return decode(res, err.status);
+    }
   };
 
   serve = (opts?: Deno.ServeOptions) => Deno.serve(this.handle, opts);
