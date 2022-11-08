@@ -1,3 +1,4 @@
+import { serve, ServeInit } from "https://deno.land/std@0.163.0/http/server.ts";
 import { Context } from "./context.ts";
 import decode from "./decode.ts";
 import { Handler, ServerError } from "./types.ts";
@@ -87,5 +88,5 @@ export class WebApp {
     }
   };
 
-  serve = (opts?: Deno.ServeOptions) => Deno.serve(this.handle, opts);
+  serve = (opts?: ServeInit) => serve(this.handle, opts);
 }
