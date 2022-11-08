@@ -28,6 +28,19 @@ for (const method of methods) {
   });
 }
 
+const ping = crypto.randomUUID();
+app.get("/ping", () => ping);
+
+Deno.test("app.serve", async () => {
+  const ac = new AbortController();
+  app.serve({ signal: ac.signal, onListen: () => {} });
+  const res = await fetch("http://localhost:8000/ping");
+  const data = await res.text();
+  assertEquals(res.status, 200);
+  assertEquals(data, ping);
+  ac.abort();
+});
+
 const err = {
   status: 400,
   code: "",
