@@ -1,5 +1,6 @@
 import { assertEquals } from "https://deno.land/std@0.161.0/testing/asserts.ts";
 import fast, { Context } from "./mod.ts";
+import { Router } from "./router.ts";
 
 function makeRequest(path: string, init: RequestInit = {}) {
   path = "https://example.com" + path;
@@ -7,6 +8,7 @@ function makeRequest(path: string, init: RequestInit = {}) {
 }
 
 const app = fast();
+const router = new Router();
 
 Deno.test("404", async () => {
   const req = makeRequest("/404");
@@ -129,4 +131,15 @@ Deno.test("decode", async () => {
   const req5 = makeRequest("/res");
   const res5 = await app.handle(req5);
   assertEquals(res5.status, 201);
+});
+
+router.get("/", () => "router home");
+app.use("/api", router);
+
+Deno.test("router", async () => {
+  const req = makeRequest("/api/");
+  const res = await app.handle(req);
+  const data = await res.text();
+  assertEquals(res.status, 200);
+  assertEquals(data, "router home");
 });
