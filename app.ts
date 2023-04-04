@@ -2,6 +2,7 @@ import { serve, ServeInit } from "https://deno.land/std@0.163.0/http/server.ts";
 import { Context } from "./context.ts";
 import decode from "./decode.ts";
 import { Handler, ServerError } from "./types.ts";
+import { Router } from "./router.ts";
 
 const notFound = {
   status: 404,
@@ -85,6 +86,13 @@ export class WebApp {
       const err = ServerError.from(error);
       const res = err.serialize();
       return decode(res, err.status);
+    }
+  };
+
+  use = (path: string, router: Router) => {
+    for (const [id, handler] of router.routes) {
+      const [method, pathname] = id.split(",");
+      this.#add(path + pathname, method, handler);
     }
   };
 
