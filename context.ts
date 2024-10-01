@@ -3,7 +3,7 @@ import { ServerError } from "./types.ts";
 
 export interface ContextInit {
   request: Request;
-  params?: Record<string, string>;
+  params?: Record<string, string | undefined>;
 }
 
 const badRequest = {
