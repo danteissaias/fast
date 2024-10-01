@@ -13,7 +13,7 @@ const badRequest = {
 
 export class Context {
   request: Request;
-  params: Record<string, string>;
+  params: Record<string, string | undefined>;
   status = 200;
 
   constructor({ request, params }: ContextInit) {
