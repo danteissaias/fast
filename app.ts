@@ -11,7 +11,7 @@ const notFound = {
 
 interface Match {
   handler: Handler;
-  params?: Record<string, string>;
+  params?: Record<string, string | undefined>;
 }
 
 export interface WebApp {
